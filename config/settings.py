@@ -70,6 +70,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com/",
 ]
 
 AUTHENTICATION_BACKENDS = (
