@@ -19,13 +19,14 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from dj_rest_auth.views import LoginView, LogoutView
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/login/', LoginView.as_view(), name='rest_login'),
     path('api/auth/logout/', LogoutView.as_view(), name='rest_logout'),
     path('api/auth/token/obtain/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/register/', include('dj_rest_auth.registration.urls')),  # updated path
-    path('dj-rest-auth/', include('dj_rest_auth.urls')),  # add if you need additional dj_rest_auth endpoints
-    path('api/', include('api.urls')),  # all other API-specific endpoints
+    path('api/auth/register/', include('dj_rest_auth.registration.urls')),
+    path('dj-rest-auth/', include('dj_rest_auth.urls')),
+    path('', include('api.urls')),
 ]
