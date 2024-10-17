@@ -1,7 +1,8 @@
 from django.db.models import Sum, Avg
 from rest_framework import viewsets, permissions, filters, generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.reverse import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Workout
@@ -53,22 +54,29 @@ class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
 
+    def get(self, request, *args, **kwargs):
+        return Response({
+            "message": "Please send a POST request to this endpoint with username, email, password, and profile data to register a new user."
+        })
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def api_root(request, format=None):
     return Response({
         'profiles': reverse('profile-list', request=request, format=format),
         'workouts': reverse('workout-list', request=request, format=format),
-        'workout-summary': reverse('workout-summary', request=request, format=format),
         'register': reverse('rest_register', request=request, format=format),
         'login': reverse('rest_login', request=request, format=format),
         'logout': reverse('rest_logout', request=request, format=format),
+        'token': reverse('token_obtain_pair', request=request, format=format),
+        'token_refresh': reverse('token_refresh', request=request, format=format),
     })

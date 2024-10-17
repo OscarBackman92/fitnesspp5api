@@ -5,7 +5,7 @@ from dj_rest_auth.views import LoginView, LogoutView
 from api.views import UserRegistrationView, api_root
 
 urlpatterns = [
-    path('', api_root, name='api-root'),  # Add this line
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/auth/', include([
         path('login/', LoginView.as_view(), name='rest_login'),
