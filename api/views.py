@@ -6,6 +6,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Workout
 from .serializers import UserProfileSerializer, WorkoutSerializer, UserRegistrationSerializer
 from .permissions import IsOwnerOrReadOnly
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework.reverse import reverse
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
@@ -58,3 +62,16 @@ class UserRegistrationView(generics.CreateAPIView):
         user = serializer.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class APIRootView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        return Response({
+            'register': reverse('rest_register', request=request, format=format),
+            'login': reverse('rest_login', request=request, format=format),
+            'logout': reverse('rest_logout', request=request, format=format),
+            'user': reverse('user-detail', request=request, format=format),
+            'workouts': reverse('workout-list', request=request, format=format),
+        })

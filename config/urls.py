@@ -11,7 +11,7 @@ urlpatterns = [
         path('logout/', LogoutView.as_view(), name='rest_logout'),
         path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-        path('register/', UserRegistrationView.as_view(), name='rest_register'),  # Add this line
+        path('register/', UserRegistrationView.as_view(), name='rest_register'),
     ])),
     path('api/', include('api.urls')),
 ]
