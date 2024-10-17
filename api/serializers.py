@@ -6,7 +6,7 @@ from .models import UserProfile, Workout
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['weight', 'height', 'fitness_goals']
+        fields = ['name', 'id', 'weight', 'height', 'fitness_goals']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(required=True)
