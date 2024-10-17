@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from dj_rest_auth.views import LoginView, LogoutView
-from api.views import UserRegistrationView
+from api.views import UserRegistrationView, api_root
 
 urlpatterns = [
+    path('', api_root, name='api-root'),  # Add this line
     path('admin/', admin.site.urls),
     path('api/auth/', include([
         path('login/', LoginView.as_view(), name='rest_login'),
