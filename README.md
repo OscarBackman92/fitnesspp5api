@@ -1,67 +1,85 @@
-# Fitness Tracker API
+# Fitness Tracking API
 
 ## Overview
 
-The Fitness Tracker API is a web application designed to help users track their workouts and monitor their fitness goals. Built using Django REST Framework, this API allows for user authentication, workout logging, and user profile management.
-
-## Technologies Used
-
-- **Backend**: Django 5.1.2
-- **Django REST Framework**: 3.15.2
-- **Authentication**: dj-rest-auth, Django Allauth, Simple JWT
-- **Database**: SQLite (for development)
-- **Deployment**: Heroku
-- **Web Server**: Gunicorn
+This project is a RESTful API for a fitness tracking application built with Django and Django REST Framework. It allows users to register, log in, create profiles, and track their workouts.
 
 ## Features
 
-- User authentication (login/logout)
+- User registration and authentication
 - User profile management
-- Workout tracking (logging workouts with date, duration, calories burned, and workout type)
+- Workout logging and tracking
+- Workout summary statistics
 
-## User Stories
+## Technologies Used
 
-1. **User Registration**: As a user, I want to register for an account so that I can access the Fitness Tracker features.
-2. **User Login**: As a user, I want to log in to my account to access my profile and workout data.
-3. **Profile Management**: As a user, I want to create and update my profile, including a bio and profile picture.
-4. **Log Workouts**: As a user, I want to log my workouts, including the type, duration, calories burned, and date of the workout.
-5. **View Workout History**: As a user, I want to view my workout history to track my progress over time.
-6. **User Logout**: As a user, I want to log out of my account to ensure my data remains secure.
+- Python 3.12
+- Django 5.1.2
+- Django REST Framework
+- PostgreSQL (for production)
+- SQLite (for development)
+- Heroku (for deployment)
 
-## Milestones
+## Setup and Installation
 
-1. **MVP (Minimum Viable Product)**:
-   - Set up the Django project structure.
-   - Implement user registration and authentication.
-   - Create user profile and workout models.
-   - Set up RESTful API endpoints for user profiles and workouts.
+1. Clone the repository:
+   git clone https://github.com/yourusername/fitness-tracking-api.git
+   cd fitness-tracking-api
 
-2. **User Profile Features**:
-   - Implement profile creation and updates.
-   - Add profile picture upload functionality.
+2. Create a virtual environment and activate it:
+   python -m venv venv
+   source venv/bin/activate  # On Windows use venv\Scripts\activate
 
-3. **Workout Logging Features**:
-   - Implement logging of workouts with duration, calories burned, and workout type.
-   - Create endpoints to retrieve and update workout records.
+3. Install the required packages:
+   pip install -r requirements.txt
 
-4. **Deployment**:
-   - Prepare the application for deployment on Heroku.
-   - Configure environment variables and database settings.
+4. Set up environment variables:
+Create a `.env` file in the project root and add the following:
+SECRET_KEY=your_secret_key
+DEBUG=True
+DATABASE_URL=your_database_url (for production)
 
-5. **Testing**:
-   - Write unit tests for API endpoints and models.
-   - Ensure all features are covered by tests before final release.
+5. Run migrations:
+   python manage.py migrate
 
-6. **Future Enhancements**:
-   - Implement user statistics and analytics.
-   - Integrate third-party fitness APIs for enhanced functionality.
+6. Start the development server:
+   python manage.py runserver
 
-## Getting Started
+## API Endpoints
 
-To set up the project locally, follow these steps:
+- `POST /api/auth/register/`: User registration
+- `POST /api/auth/login/`: User login
+- `POST /api/auth/logout/`: User logout
+- `GET /api/profiles/`: List user profiles
+- `POST /api/profiles/`: Create user profile
+- `GET /api/profiles/{id}/`: Retrieve user profile
+- `PUT /api/profiles/{id}/`: Update user profile
+- `DELETE /api/profiles/{id}/`: Delete user profile
+- `GET /api/workouts/`: List workouts
+- `POST /api/workouts/`: Create workout
+- `GET /api/workouts/{id}/`: Retrieve workout
+- `PUT /api/workouts/{id}/`: Update workout
+- `DELETE /api/workouts/{id}/`: Delete workout
+- `GET /api/workouts/summary/`: Get workout summary
 
-1. **Clone the repository**:
+## Testing
 
-   ```bash
-   git clone <repository-url>
-   cd fitnesspp5api
+To run the test suite:
+python manage.py test
+Copy
+## Deployment
+
+This project is configured for deployment on Heroku. Follow these steps to deploy:
+
+1. Create a new Heroku app
+2. Set the necessary environment variables in Heroku's config vars
+3. Connect your GitHub repository to the Heroku app
+4. Enable automatic deploys or manually deploy your main branch
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License.
