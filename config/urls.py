@@ -26,7 +26,7 @@ urlpatterns = [
     path('api/auth/logout/', LogoutView.as_view(), name='rest_logout'),
     path('api/auth/token/obtain/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/register/', include('dj_rest_auth.registration.urls')),
+    path('api/auth/register/', include('dj_rest_auth.registration.urls')),  # Only use dj_rest_auth registration
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('', include('api.urls')),
 ]
