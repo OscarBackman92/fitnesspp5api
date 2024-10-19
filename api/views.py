@@ -40,21 +40,28 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        
-        if serializer.is_valid():
-            self.perform_update(serializer)
-            logger.info(f"Workout {instance.id} updated successfully by user {request.user.id}")
-            return Response(serializer.data)
-        else:
-            logger.warning(f"Failed workout update attempt by user {request.user.id}. Errors: {serializer.errors}")
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            
+            if serializer.is_valid():
+                self.perform_update(serializer)
+                return Response(serializer.data)
+            else:
+                logger.error(f"Validation error: {serializer.errors}")
+                return Response({
+                    'status': 'Bad request',
+                    'message': 'Workout could not be updated with received data.',
+                    'errors': serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error updating workout: {str(e)}")
             return Response({
-                'status': 'Bad request',
-                'message': 'Workout could not be updated with received data.',
-                'errors': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'status': 'Error',
+                'message': 'An unexpected error occurred while updating the workout.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
