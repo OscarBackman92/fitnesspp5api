@@ -1,4 +1,5 @@
 from django.db.models import Sum, Avg
+from django.utils import timezone
 from rest_framework import viewsets, permissions, filters, generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
@@ -38,18 +39,28 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def summary(self, request):
         user_workouts = self.get_queryset()
+        today = timezone.now().date()
+        last_week = today - timezone.timedelta(days=7)
+        last_month = today - timezone.timedelta(days=30)
+
         total_workouts = user_workouts.count()
         total_duration = user_workouts.aggregate(Sum('duration'))['duration__sum'] or 0
         total_calories = user_workouts.aggregate(Sum('calories'))['calories__sum'] or 0
         avg_duration = user_workouts.aggregate(Avg('duration'))['duration__avg'] or 0
 
+        recent_workouts = user_workouts.order_by('-date_logged')[:5]
+        workouts_this_week = user_workouts.filter(date_logged__gte=last_week).count()
+        workouts_this_month = user_workouts.filter(date_logged__gte=last_month).count()
+
         return Response({
             'total_workouts': total_workouts,
             'total_duration': total_duration,
             'total_calories': total_calories,
-            'avg_duration': avg_duration
+            'avg_duration': avg_duration,
+            'recent_workouts': WorkoutSerializer(recent_workouts, many=True).data,
+            'workouts_this_week': workouts_this_week,
+            'workouts_this_month': workouts_this_month
         })
-
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
