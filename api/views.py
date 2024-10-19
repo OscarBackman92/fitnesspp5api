@@ -1,3 +1,4 @@
+import logging
 from django.db.models import Sum, Avg
 from django.utils import timezone
 from rest_framework import viewsets, permissions, filters, generics, status
@@ -9,6 +10,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Workout
 from .serializers import UserProfileSerializer, WorkoutSerializer, UserRegistrationSerializer
 from .permissions import IsOwnerOrReadOnly
+
+logger = logging.getLogger(__name__)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
@@ -43,8 +46,10 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         
         if serializer.is_valid():
             self.perform_update(serializer)
+            logger.info(f"Workout {instance.id} updated successfully by user {request.user.id}")
             return Response(serializer.data)
         else:
+            logger.warning(f"Failed workout update attempt by user {request.user.id}. Errors: {serializer.errors}")
             return Response({
                 'status': 'Bad request',
                 'message': 'Workout could not be updated with received data.',
@@ -53,29 +58,36 @@ class WorkoutViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        user_workouts = self.get_queryset()
-        today = timezone.now().date()
-        last_week = today - timezone.timedelta(days=7)
-        last_month = today - timezone.timedelta(days=30)
+        try:
+            user_workouts = self.get_queryset()
+            today = timezone.now().date()
+            last_week = today - timezone.timedelta(days=7)
+            last_month = today - timezone.timedelta(days=30)
 
-        total_workouts = user_workouts.count()
-        total_duration = user_workouts.aggregate(Sum('duration'))['duration__sum'] or 0
-        total_calories = user_workouts.aggregate(Sum('calories'))['calories__sum'] or 0
-        avg_duration = user_workouts.aggregate(Avg('duration'))['duration__avg'] or 0
+            total_workouts = user_workouts.count()
+            total_duration = user_workouts.aggregate(Sum('duration'))['duration__sum'] or 0
+            total_calories = user_workouts.aggregate(Sum('calories'))['calories__sum'] or 0
+            avg_duration = user_workouts.aggregate(Avg('duration'))['duration__avg'] or 0
 
-        recent_workouts = user_workouts.order_by('-date_logged')[:5]
-        workouts_this_week = user_workouts.filter(date_logged__gte=last_week).count()
-        workouts_this_month = user_workouts.filter(date_logged__gte=last_month).count()
+            recent_workouts = user_workouts.order_by('-date_logged')[:5]
+            workouts_this_week = user_workouts.filter(date_logged__gte=last_week).count()
+            workouts_this_month = user_workouts.filter(date_logged__gte=last_month).count()
 
-        return Response({
-            'total_workouts': total_workouts,
-            'total_duration': total_duration,
-            'total_calories': total_calories,
-            'avg_duration': avg_duration,
-            'recent_workouts': WorkoutSerializer(recent_workouts, many=True).data,
-            'workouts_this_week': workouts_this_week,
-            'workouts_this_month': workouts_this_month
-        })
+            return Response({
+                'total_workouts': total_workouts,
+                'total_duration': total_duration,
+                'total_calories': total_calories,
+                'avg_duration': avg_duration,
+                'recent_workouts': WorkoutSerializer(recent_workouts, many=True).data,
+                'workouts_this_week': workouts_this_week,
+                'workouts_this_month': workouts_this_month
+            })
+        except Exception as e:
+            logger.error(f"Error generating workout summary for user {request.user.id}: {str(e)}")
+            return Response({
+                'status': 'Error',
+                'message': 'An error occurred while generating the workout summary.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
@@ -83,15 +95,28 @@ class UserRegistrationView(generics.CreateAPIView):
 
     def get(self, request, *args, **kwargs):
         return Response({
-            "message": "Please send a POST request to this endpoint with username, email, password."
+            "message": "Please send a POST request to this endpoint with username, email, and password to register.",
+            "required_fields": ["username", "email", "password"]
         })
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            logger.info(f"New user registered: {user.username}")
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            logger.error(f"User registration failed: {str(e)}")
+            return Response({
+                'status': 'Error',
+                'message': 'Registration failed. Please check your input and try again.',
+                'errors': serializer.errors if hasattr(serializer, 'errors') else str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        return serializer.save()
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

@@ -34,9 +34,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return ret
 
 class WorkoutSerializer(serializers.ModelSerializer):
-    workout_type_display = serializers.CharField(source='get_workout_type_display', read_only=True)
-    duration_hours = serializers.FloatField(source='get_duration_in_hours', read_only=True)
-    user = serializers.StringRelatedField(read_only=True)
+    class Meta:
+        model = Workout
+        fields = ['id', 'workout_type', 'duration', 'calories', 'notes', 'date_logged', 'user']
+        read_only_fields = ['id', 'user']
 
     class Meta:
         model = Workout
