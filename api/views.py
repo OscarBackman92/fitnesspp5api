@@ -36,6 +36,21 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        else:
+            return Response({
+                'status': 'Bad request',
+                'message': 'Workout could not be updated with received data.',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         user_workouts = self.get_queryset()
@@ -61,13 +76,14 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             'workouts_this_week': workouts_this_week,
             'workouts_this_month': workouts_this_month
         })
+
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
         return Response({
-            "message": "Please send a POST request to this endpoint with username, email, password, and profile data to register a new user."
+            "message": "Please send a POST request to this endpoint with username, email, password."
         })
 
     def create(self, request, *args, **kwargs):
@@ -76,8 +92,6 @@ class UserRegistrationView(generics.CreateAPIView):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
