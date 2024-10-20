@@ -49,16 +49,21 @@ class WorkoutSerializer(serializers.ModelSerializer):
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer()
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    bmi = serializers.FloatField(source='calculate_bmi', read_only=True)
+    age = serializers.IntegerField(source='age', read_only=True)
 
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile']
-        read_only_fields = ['id', 'username', 'email']
+        model = UserProfile
+        fields = ['username', 'email', 'name', 'weight', 'height', 'fitness_goals', 
+                  'date_of_birth', 'created_at', 'updated_at', 'gender', 'bmi', 'age']
+        read_only_fields = ['created_at', 'updated_at']
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        profile_data = representation.pop('profile')
-        for key, value in profile_data.items():
-            representation[key] = value
-        return representation
+        ret = super().to_representation(instance)
+        if ret['bmi'] is None:
+            ret.pop('bmi')
+        if ret['age'] is None:
+            ret.pop('age')
+        return ret

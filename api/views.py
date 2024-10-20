@@ -1,4 +1,5 @@
 import logging
+import traceback
 from django.db.models import Sum, Avg
 from django.utils import timezone
 from rest_framework import viewsets, permissions, filters, generics, status
@@ -28,16 +29,20 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request):
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+            if created:
+                logger.info(f"Created new UserProfile for user: {request.user.username}")
             serializer = UserInfoSerializer(user_profile)
             logger.info(f"User info retrieved for user: {request.user.username}")
             return Response(serializer.data)
-        except UserProfile.DoesNotExist:
-            logger.error(f"UserProfile does not exist for user: {request.user.username}")
-            return Response({"error": "User profile not found"}, status=404)
         except Exception as e:
             logger.error(f"Error retrieving user info for {request.user.username}: {str(e)}")
-            return Response({"error": "An error occurred while retrieving user info"}, status=500)
+            logger.error(traceback.format_exc())
+            return Response({
+                "error": "An error occurred while retrieving user info",
+                "details": str(e),
+                "trace": traceback.format_exc()
+            }, status=500)
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutSerializer
