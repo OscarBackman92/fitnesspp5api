@@ -12,6 +12,7 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    gender = models.CharField(max_length=10, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')], blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} ({self.user.username})"
@@ -44,6 +45,7 @@ class Workout(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    intensity = models.CharField(max_length=20, choices=[('low', 'Low'), ('moderate', 'Moderate'), ('high', 'High')], default='moderate')
 
     class Meta:
         ordering = ['-date_logged', '-created_at']

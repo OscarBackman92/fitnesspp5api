@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.reverse import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Workout
-from .serializers import UserProfileSerializer, WorkoutSerializer, UserRegistrationSerializer
+from .serializers import UserProfileSerializer, WorkoutSerializer, UserRegistrationSerializer, UserInfoSerializer
 from .permissions import IsOwnerOrReadOnly
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,11 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        serializer = UserInfoSerializer(request.user)
+        return Response(serializer.data)
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutSerializer

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from dj_rest_auth.views import LoginView, LogoutView
-from api.views import UserRegistrationView, api_root
+from api.views import UserRegistrationView, api_root, UserProfileViewSet
 
 urlpatterns = [
     path('', api_root, name='api-root'),
@@ -15,4 +15,5 @@ urlpatterns = [
         path('register/', UserRegistrationView.as_view(), name='rest_register'),
     ])),
     path('api/', include('api.urls')),
+    path('user/info/', UserProfileViewSet.as_view({'get': 'me'}), name='user-info'),
 ]

@@ -46,3 +46,19 @@ class WorkoutSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile']
+        read_only_fields = ['id', 'username', 'email']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        profile_data = representation.pop('profile')
+        for key, value in profile_data.items():
+            representation[key] = value
+        return representation
