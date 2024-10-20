@@ -43,7 +43,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 "error": "An error occurred while retrieving user info",
                 "details": str(e),
                 "trace": traceback.format_exc()
-            }, status=500
+            }, status=500)
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutSerializer
