@@ -8,4 +8,5 @@ router.register(r'workouts', WorkoutViewSet, basename='workout')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('user/info/', UserProfileViewSet.as_view({'get': 'me'}), name='user-info'),
 ]

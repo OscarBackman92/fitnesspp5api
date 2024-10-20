@@ -15,5 +15,4 @@ urlpatterns = [
         path('register/', UserRegistrationView.as_view(), name='rest_register'),
     ])),
     path('api/', include('api.urls')),
-    path('user/info/', UserProfileViewSet.as_view({'get': 'me'}), name='user-info'),
 ]

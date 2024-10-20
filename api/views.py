@@ -27,8 +27,17 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def me(self, request):
-        serializer = UserInfoSerializer(request.user)
-        return Response(serializer.data)
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            serializer = UserInfoSerializer(user_profile)
+            logger.info(f"User info retrieved for user: {request.user.username}")
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            logger.error(f"UserProfile does not exist for user: {request.user.username}")
+            return Response({"error": "User profile not found"}, status=404)
+        except Exception as e:
+            logger.error(f"Error retrieving user info for {request.user.username}: {str(e)}")
+            return Response({"error": "An error occurred while retrieving user info"}, status=500)
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutSerializer
