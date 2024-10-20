@@ -11,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Workout
 from .serializers import UserProfileSerializer, WorkoutSerializer, UserRegistrationSerializer, UserInfoSerializer
 from .permissions import IsOwnerOrReadOnly
+from rest_framework.views import APIView
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST 
 
 logger = logging.getLogger(__name__)
 
@@ -149,3 +151,27 @@ def api_root(request, format=None):
         'token': reverse('token_obtain_pair', request=request, format=format),
         'token_refresh': reverse('token_refresh', request=request, format=format),
     })
+
+
+class ProfilePictureUploadView(APIView):
+    def put(self, request):
+        serializer = UserProfileSerializer(request.user.profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return
+        Response({'profile_picture_url': serializer.data.get('profile_picture')}, status=HTTP_200_OK)
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def upload_profile_picture(request):
+    user_profile = request.user.profile
+
+    if request.FILES.get('profile_picture'):
+        profile_picture = request.FILES['profile_picture']
+        user_profile.profile_picture = profile_picture
+        user_profile.save()
+
+        profile_picture_url = user_profile.profile_picture.url
+
+    serializer = UserProfileSerializer(user_profile)
+    return Response({'profile_picture_url': profile_picture_url})

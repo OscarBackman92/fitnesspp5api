@@ -5,10 +5,12 @@ from .models import UserProfile, Workout
 class UserProfileSerializer(serializers.ModelSerializer):
     age = serializers.IntegerField(read_only=True)
     bmi = serializers.FloatField(source='calculate_bmi', read_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_empty_file=True)
+
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'name', 'weight', 'height', 'fitness_goals', 'date_of_birth', 'age', 'bmi', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'weight', 'height', 'fitness_goals', 'date_of_birth', 'age', 'bmi', 'profile_picture', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
