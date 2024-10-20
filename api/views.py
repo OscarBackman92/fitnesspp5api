@@ -33,8 +33,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             if created:
                 logger.info(f"Created new UserProfile for user: {request.user.username}")
             serializer = UserInfoSerializer(user_profile)
+            data = serializer.data
             logger.info(f"User info retrieved for user: {request.user.username}")
-            return Response(serializer.data)
+            return Response(data)
         except Exception as e:
             logger.error(f"Error retrieving user info for {request.user.username}: {str(e)}")
             logger.error(traceback.format_exc())
@@ -42,7 +43,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 "error": "An error occurred while retrieving user info",
                 "details": str(e),
                 "trace": traceback.format_exc()
-            }, status=500)
+            }, status=500
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutSerializer

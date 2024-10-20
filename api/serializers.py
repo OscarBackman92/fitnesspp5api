@@ -51,8 +51,8 @@ class WorkoutSerializer(serializers.ModelSerializer):
 class UserInfoSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
-    bmi = serializers.FloatField(source='calculate_bmi', read_only=True)
-    age = serializers.IntegerField(source='age', read_only=True)
+    bmi = serializers.FloatField(read_only=True)
+    age = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = UserProfile
@@ -62,6 +62,8 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        ret['bmi'] = instance.calculate_bmi()
+        ret['age'] = instance.age()
         if ret['bmi'] is None:
             ret.pop('bmi')
         if ret['age'] is None:
