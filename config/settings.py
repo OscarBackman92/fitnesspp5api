@@ -55,6 +55,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://frontendfitness-e0476c66fecb.herokuapp.com",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
