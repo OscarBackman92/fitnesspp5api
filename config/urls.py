@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from dj_rest_auth.views import LoginView, LogoutView
-from api.views import UserRegistrationView, api_root, UserProfileViewSet
+from api.views import UserRegistrationView, api_root
 
 urlpatterns = [
     path('', api_root, name='api-root'),
