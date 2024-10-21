@@ -74,20 +74,43 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 ]
 
-# CORS settings
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 else:
     CORS_ALLOWED_ORIGINS = [
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
     ]
+    CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ORIGINS = [
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
     ]
 
-CORS_ALLOW_CREDENTIALS = True
+# Additional CORS settings
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
-# The rest of your settings remain the same...
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Logging
 LOGGING = {
