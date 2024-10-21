@@ -85,10 +85,12 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = [
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
+        "http://localhost:3000",
     ]
     CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ORIGINS = [
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
+        "http://localhost:3000",
     ]
 
 # Common settings for both environments
