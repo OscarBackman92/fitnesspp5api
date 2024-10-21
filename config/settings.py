@@ -80,6 +80,7 @@ if DEBUG:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://frontendfitness-e0476c66fecb.herokuapp.com",
     ]
 else:
     CORS_ALLOWED_ORIGINS = [
@@ -90,7 +91,7 @@ else:
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
     ]
 
-# Additional CORS settings
+# Common settings for both environments
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -111,6 +112,23 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Ensure OPTIONS request handling
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+# Allow cookies in cross-origin requests
+CORS_ALLOW_CREDENTIALS = True
+
+# Ensure the frontend can read the CSRF cookie
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # False to allow JavaScript access
+SESSION_COOKIE_HTTPONLY = True
+
+# Use secure cookies in production
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 # Logging
 LOGGING = {
