@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
+    'cloudinary_storage',
     'cloudinary',
     'django.contrib.staticfiles',
     'corsheaders',
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'django_filters',
     'api',
+    'workouts',
 ]
 
 MIDDLEWARE = [
@@ -149,8 +151,10 @@ os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL = '/media/'
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Cloudinary
 CLOUDINARY_STORAGE = {
