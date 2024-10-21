@@ -15,7 +15,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def get_profile_picture(self, obj):
-        if obj.profile_picture:
+        if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
             return obj.profile_picture.url
         else:
             default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
@@ -75,7 +75,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def get_profile_picture(self, obj):
-        if obj.profile_picture:
+        if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
             return obj.profile_picture.url
         else:
             default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
