@@ -10,7 +10,11 @@ class UserProfile(models.Model):
     weight = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500)])
     height = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(300)])
     fitness_goals = models.TextField(null=True, blank=True)
-    profile_picture = CloudinaryField('image', folder='profile_pictures', blank=True, null=True)
+    profile_picture = CloudinaryField('image', 
+                                      folder='profile_pictures', 
+                                      default='default_profile_ylwpgw',
+                                      blank=True, 
+                                      null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

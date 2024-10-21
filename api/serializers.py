@@ -1,10 +1,6 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import UserProfile
-from cloudinary.models import CloudinaryField
-
 from django.contrib.auth.models import User
-from rest_framework import serializers
+from cloudinary.utils import cloudinary_url
 from .models import UserProfile
 from django.db import IntegrityError
 
@@ -15,13 +11,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'name', 'weight', 'height', 'fitness_goals', 'date_of_birth', 'age', 'bmi', 'profile_picture', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'weight', 'height', 'fitness_goals', 'date_of_birth', 'age', 'bmi', 'profile_picture', 'created_at', 'updated_at', 'gender']
         read_only_fields = ['created_at', 'updated_at']
 
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             return obj.profile_picture.url
-        return None
+        else:
+            default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
+                                                        format="jpg", 
+                                                        crop="fill", 
+                                                        width=200, 
+                                                        height=200)
+            return default_image_url
 
     def update(self, instance, validated_data):
         profile_picture = validated_data.pop('profile_picture', None)
@@ -58,6 +60,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret['profile'] = UserProfileSerializer(instance.userprofile).data
         return ret
+
 class UserInfoSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -74,7 +77,13 @@ class UserInfoSerializer(serializers.ModelSerializer):
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             return obj.profile_picture.url
-        return None
+        else:
+            default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
+                                                        format="jpg", 
+                                                        crop="fill", 
+                                                        width=200, 
+                                                        height=200)
+            return default_image_url
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
