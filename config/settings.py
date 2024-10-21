@@ -1,8 +1,9 @@
+import sys
 from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-from datetime import timedelta
+
 
 load_dotenv()
 
@@ -128,7 +129,6 @@ TEMPLATES = [
 
 ROOT_URLCONF = 'config.urls'
 
-# Then, update the DATABASES configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -136,8 +136,8 @@ DATABASES = {
     }
 }
 
-# If DATABASE_URL is set in the environment variables, use it instead
-if 'DATABASE_URL' in os.environ:
+# If not running tests and DATABASE_URL is set, use it instead
+if 'test' not in sys.argv and 'DATABASE_URL' in os.environ:
     DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
 # Static files

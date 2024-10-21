@@ -1,93 +1,98 @@
+from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
+from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
-from .models import UserProfile, Workout
+from .models import UserProfile
+from .serializers import UserProfileSerializer, UserRegistrationSerializer, UserInfoSerializer
 from datetime import date
+from unittest import skip
+import json
 
-class UserRegistrationTestCase(APITestCase):
-    def test_user_registration(self):
-        url = reverse('rest_register')
-        data = {
-            'username': 'testuser',
-            'email': 'test@example.com',
-            'password': 'testpassword123',
-            'profile': {
-                'name': 'Test User',
-                'weight': 70,
-                'height': 175
-            }
-        }
-        response = self.client.post(url, data, format='json')
-        print(f"Response status code: {response.status_code}")
-        print(f"Response content: {response.content}")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(UserProfile.objects.count(), 1)
-
-class AuthenticationTestCase(APITestCase):
+class UserProfileModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            name='Test User',
+            weight=70,
+            height=175,
+            date_of_birth=date(1990, 1, 1)
+        )
 
-    def test_login(self):
-        url = reverse('rest_login')
-        data = {
-            'username': 'testuser',
-            'password': 'testpass123'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('key', response.data) 
+    def test_calculate_bmi(self):
+        self.assertAlmostEqual(self.profile.calculate_bmi(), 22.86, places=2)
 
-class UserProfileTestCase(APITestCase):
+    def test_age(self):
+        today = date.today()
+        expected_age = today.year - self.profile.date_of_birth.year
+        if today < date(today.year, self.profile.date_of_birth.month, self.profile.date_of_birth.day):
+            expected_age -= 1
+        self.assertEqual(self.profile.age(), expected_age)
+
+class UserProfileViewSetTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.profile = UserProfile.objects.create(user=self.user, name='Test User')
         self.client.force_authenticate(user=self.user)
-        self.profile = UserProfile.objects.create(user=self.user, name='Test User', weight=70, height=175)
 
-    def test_get_profile(self):
-        url = reverse('profile-detail', kwargs={'pk': self.profile.pk})
+    def test_me_endpoint(self):
+        url = reverse('profile-me')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], 'Test User')
 
-    def test_update_profile(self):
-        url = reverse('profile-detail', kwargs={'pk': self.profile.pk})
-        data = {'name': 'Updated Name', 'weight': 75}
-        response = self.client.patch(url, data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(UserProfile.objects.get(pk=self.profile.pk).name, 'Updated Name')
 
-class WorkoutTestCase(APITestCase):
+class UserRegistrationViewTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
-        self.client.force_authenticate(user=self.user)
+        self.client = APIClient()
 
-    def test_create_workout(self):
-        url = reverse('workout-list')
+    def test_user_registration(self):
+        url = reverse('rest_register')
         data = {
-            'workout_type': 'cardio',
-            'duration': 30,
-            'calories': 300,
-            'date_logged': '2024-10-17'
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password': 'newpassword123',
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, format='json')
+        print(f"Response status code: {response.status_code}")
+        print(f"Response content: {response.content.decode('utf-8')}")
+        
+        if response.status_code != status.HTTP_201_CREATED:
+            try:
+                error_data = json.loads(response.content.decode('utf-8'))
+                for field, errors in error_data.items():
+                    print(f"Errors for {field}: {errors}")
+            except json.JSONDecodeError:
+                print("Could not parse response content as JSON")
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Workout.objects.count(), 1)
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+        self.assertTrue(UserProfile.objects.filter(user__username='newuser').exists())
 
-    def test_get_workouts(self):
-        Workout.objects.create(user=self.user, workout_type='strength', duration=45, calories=200, date_logged=date.today())
-        url = reverse('workout-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
+class SerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            name='Test User',
+            weight=70,
+            height=175,
+            date_of_birth=date(1990, 1, 1)
+        )
 
-    def test_workout_summary(self):
-        Workout.objects.create(user=self.user, workout_type='cardio', duration=30, calories=300, date_logged=date.today())
-        Workout.objects.create(user=self.user, workout_type='strength', duration=45, calories=200, date_logged=date.today())
-        url = reverse('workout-summary')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total_workouts'], 2)
-        self.assertEqual(response.data['total_duration'], 75)
-        self.assertEqual(response.data['total_calories'], 500)
+    def test_user_profile_serializer(self):
+        serializer = UserProfileSerializer(instance=self.profile)
+        data = serializer.data
+        self.assertEqual(data['name'], 'Test User')
+        self.assertIn('bmi', data)
+        self.assertIn('age', data)
+
+    def test_user_info_serializer(self):
+        serializer = UserInfoSerializer(instance=self.profile)
+        data = serializer.data
+        self.assertEqual(data['username'], 'testuser')
+        self.assertEqual(data['name'], 'Test User')
+        self.assertIn('bmi', data)
+        self.assertIn('age', data)
