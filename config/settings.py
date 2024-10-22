@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'django_filters',
     'api',
     'workouts',
-    'social',
+    'social.apps.SocialConfig',
 ]
 
 MIDDLEWARE = [

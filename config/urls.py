@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/', include([
         path('', include('api.urls')),
         path('', include('workouts.urls')),
+        path('', include('social.urls')),
         path('auth/', include([
             path('register/', UserRegistrationView.as_view(), name='rest_register'),
             path('login/', LoginView.as_view(), name='rest_login'),

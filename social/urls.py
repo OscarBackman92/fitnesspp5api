@@ -3,9 +3,9 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'follows', views.UserFollowViewSet, basename='follow')
-router.register(r'likes', views.WorkoutLikeViewSet, basename='like')
-router.register(r'comments', views.WorkoutCommentViewSet, basename='comment')
+router.register(r'follows', views.UserFollowViewSet, basename='social-follow')
+router.register(r'likes', views.WorkoutLikeViewSet, basename='social-like')
+router.register(r'comments', views.WorkoutCommentViewSet, basename='social-comment')
 
 urlpatterns = [
     path('', include(router.urls)),

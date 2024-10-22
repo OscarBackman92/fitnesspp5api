@@ -81,7 +81,6 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
 def api_root(request, format=None):
     return Response({
         'profiles': reverse('profile-list', request=request, format=format),
@@ -91,5 +90,9 @@ def api_root(request, format=None):
         'logout': reverse('rest_logout', request=request, format=format),
         'token': reverse('token_obtain_pair', request=request, format=format),
         'token_refresh': reverse('token_refresh', request=request, format=format),
-        'update_profile_picture': reverse('profile-update-profile-picture', request=request, format=format),
+        # Add social endpoints
+        'social_feed': reverse('social-feed', request=request, format=format),
+        'follows': reverse('social-follow-list', request=request, format=format),
+        'likes': reverse('social-like-list', request=request, format=format),
+        'comments': reverse('social-comment-list', request=request, format=format),
     })
