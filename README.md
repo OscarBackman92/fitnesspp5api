@@ -53,20 +53,20 @@ git clone <repository-url>
 cd fitness-api
 ```
 
-2, Create and activate virtual environment:
+2.  Create and activate virtual environment:
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
 
-3, Install dependencies:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4, Create .env file:
+4. Create .env file:
 
 ```env
 SECRET_KEY=your_secret_key
@@ -75,13 +75,13 @@ CLOUDINARY_URL=your_cloudinary_url
 DATABASE_URL=your_database_url  # For production
 ```
 
-5, Run migrations:
+5. Run migrations:
 
 ```bash
 python manage.py migrate
 ```
 
-6, Start development server:
+6. Start development server:
 
 ```bash
 python manage.py runserver
@@ -184,14 +184,14 @@ DATABASE_URL=your_production_db_url
 CLOUDINARY_URL=your_cloudinary_url
 ```
 
-2, Configure production settings:
+2. Configure production settings:
 
 - SSL/TLS certificates
 - ALLOWED_HOSTS
 - Static file serving
 - Database configuration
 
-3, Additional security measures enabled in production:
+3. Additional security measures enabled in production:
 
 - Secure SSL redirect
 - Secure cookies
