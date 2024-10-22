@@ -35,7 +35,7 @@ else:
     SECURE_HSTS_PRELOAD = True
 
 # Comment out or remove in development
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 INSTALLED_APPS = [
