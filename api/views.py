@@ -3,7 +3,7 @@ import traceback
 from rest_framework import viewsets, permissions, filters, generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.reverse import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Use this for general access control
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'name']
 
@@ -24,7 +24,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsOwnerOrReadOnly])  # Specific action permission
     def me(self, request):
         try:
             user_profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -43,7 +43,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 "trace": traceback.format_exc()
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['PUT'])
+    @action(detail=False, methods=['PUT'], permission_classes=[IsOwnerOrReadOnly])  # Restricting update to owner
     def update_profile_picture(self, request):
         try:
             user_profile = self.get_queryset().first()
