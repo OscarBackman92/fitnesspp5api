@@ -5,6 +5,7 @@ A comprehensive Django REST API for fitness tracking with social features. This 
 ## User Stories & Implementation Status
 
 ### Authentication & Profile Management
+
 1. User Registration #1 [COMPLETE]
    - As a: New user
    - I want to: Register an account
@@ -31,6 +32,7 @@ A comprehensive Django REST API for fitness tracking with social features. This 
    - So that: I can keep my fitness data up to date
 
 ### Workout Management
+
 6. Log Workouts #6 [COMPLETE]
    - As a: User
    - I want to: Log my workouts (type, duration, calories)
@@ -47,6 +49,7 @@ A comprehensive Django REST API for fitness tracking with social features. This 
    - So that: I can correct any mistakes or remove outdated information
 
 ### Progress & Goals
+
 9. Visualize Progress #9 [PARTIAL]
    - As a: User
    - I want to: Visualize my progress over time with charts
@@ -59,6 +62,7 @@ A comprehensive Django REST API for fitness tracking with social features. This 
     - So that: I can stay motivated and track my achievements
 
 ### Social Features
+
 11. Follow Other Users #11 [COMPLETE]
     - As a: User
     - I want to: Follow other users
@@ -72,6 +76,7 @@ A comprehensive Django REST API for fitness tracking with social features. This 
 ## Features Implementation Status
 
 ### Complete Features
+
 - User Registration & Authentication
 - Profile Management
 - Workout Tracking & History
@@ -80,9 +85,11 @@ A comprehensive Django REST API for fitness tracking with social features. This 
 - Basic Progress Statistics
 
 ### Partially Complete Features
+
 - Progress Visualization (Basic metrics implemented, charts pending)
 
 ### Planned Features
+
 - Fitness Goals System
 - Advanced Analytics
 - Achievement System
@@ -162,36 +169,44 @@ erDiagram
     }
 ```
 
+![ERD](/readme_images/api_erd.png)
+
 ## Technical Stack
 
 ### Core Framework
+
 - Django 5.1.2
   - Custom User Model
   - Extended Profile Model
   - Social Relations Models
 
 ### API Framework
+
 - Django REST Framework 3.15.2
   - Custom Viewsets
   - Nested Serializers
   - Filter Backends
 
 ### Authentication
+
 - JWT via djangorestframework-simplejwt
   - Token Refresh Mechanism
   - Custom Authentication Classes
 
 ### Database
+
 - Development: SQLite
 - Production: PostgreSQL
 
 ### Media Storage
+
 - Cloudinary
   - Image optimization
   - Secure upload
   - CDN delivery
 
 ### Additional Components
+
 - django-filter for advanced searching
 - django-cors-headers for CORS
 - dj-rest-auth for authentication flows
@@ -201,6 +216,7 @@ erDiagram
 ## API Endpoints
 
 ### Authentication
+
 ```
 POST   /api/auth/register/       - Register new user
 POST   /api/auth/login/         - Login
@@ -210,6 +226,7 @@ POST   /api/auth/token/refresh/ - Refresh JWT token
 ```
 
 ### Profiles
+
 ```
 GET    /api/profiles/me/                    - Get current user profile
 PUT    /api/profiles/update_profile_picture/ - Update profile picture
@@ -218,6 +235,7 @@ PUT    /api/profiles/{id}/                  - Update profile
 ```
 
 ### Workouts
+
 ```
 GET    /api/workouts/         - List workouts
 POST   /api/workouts/         - Create workout
@@ -228,6 +246,7 @@ GET    /api/workouts/summary/ - Get workout stats
 ```
 
 ### Social
+
 ```
 POST   /api/social/follows/follow/    - Follow user
 POST   /api/social/follows/unfollow/  - Unfollow user
@@ -241,13 +260,16 @@ GET    /api/social/comments/{id}/     - Get workout comments
 ## Installation and Setup
 
 ### Prerequisites
+
 - Python 3.8+
 - pip
 - virtualenv
 - PostgreSQL (for production)
 
 ### Development Setup
+
 1. Clone and Setup
+
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -267,6 +289,7 @@ pip install -r requirements.txt
 ```
 
 2. Environment Configuration
+
 ```env
 SECRET_KEY=your_secret_key
 DEBUG=True
@@ -277,6 +300,7 @@ CORS_ORIGIN_WHITELIST=http://localhost:3000
 ```
 
 3. Database Setup
+
 ```bash
 python manage.py makemigrations
 python manage.py migrate
@@ -300,15 +324,21 @@ coverage report
 ## Contributing
 
 1. Fork the repository
+
 2. Create a feature branch
+
 ```bash
 git checkout -b feature/your-feature-name
 ```
+
 3. Commit your changes
+
 ```bash
 git commit -m "type(scope): description"
 ```
+
 4. Push to the branch
+
 5. Create a Pull Request
 
 ## License
