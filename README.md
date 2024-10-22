@@ -1,215 +1,320 @@
-# Django Fitness API
+# Fitness API
 
-A comprehensive RESTful API for fitness tracking and user profile management, built with Django REST Framework. The API enables user registration, profile management with physical attributes, and detailed workout tracking.
+A comprehensive Django REST API for fitness tracking with social features. This API enables users to track workouts, manage profiles, and engage with other fitness enthusiasts.
 
-## Features
+## User Stories & Implementation Status
 
-### User Management
+### Authentication & Profile Management
+1. User Registration #1 [COMPLETE]
+   - As a: New user
+   - I want to: Register an account
+   - So that: I can log in and track my fitness activities
 
-- User registration and authentication with JWT
-- Customizable user profiles with physical attributes
-- Profile picture management via Cloudinary
-- Automatic BMI and age calculations
-- Secure password handling
+2. User Login #2 [COMPLETE]
+   - As a: Registered user
+   - I want to: Log in to my account
+   - So that: I can access my profile and data
 
-### Workout Tracking
+3. User Logout #3 [COMPLETE]
+   - As a: Logged-in user
+   - I want to: Log out
+   - So that: I can secure my account when I'm finished
 
-- Multiple workout types (cardio, strength, flexibility, sports)
-- Duration and calorie tracking
-- Workout intensity levels
-- Detailed notes and timestamps
-- Comprehensive workout statistics and summaries
+4. User Profile Setup #4 [COMPLETE]
+   - As a: User
+   - I want to: Set up my profile with details like weight and fitness goals
+   - So that: I can personalize my fitness experience
 
-### API Features
+5. Edit Profile #5 [COMPLETE]
+   - As a: User
+   - I want to: Edit my profile information
+   - So that: I can keep my fitness data up to date
 
-- Token-based authentication
-- Custom permissions for object ownership
-- Filtering, searching, and ordering capabilities
-- Cloudinary integration for media storage
-- CORS support for frontend integration
+### Workout Management
+6. Log Workouts #6 [COMPLETE]
+   - As a: User
+   - I want to: Log my workouts (type, duration, calories)
+   - So that: I can track my fitness activities over time
+
+7. View Past Workouts #7 [COMPLETE]
+   - As a: User
+   - I want to: View a list of my past workouts
+   - So that: I can monitor my progress
+
+8. Edit/Delete Workout #8 [COMPLETE]
+   - As a: User
+   - I want to: Edit or delete a workout entry
+   - So that: I can correct any mistakes or remove outdated information
+
+### Progress & Goals
+9. Visualize Progress #9 [PARTIAL]
+   - As a: User
+   - I want to: Visualize my progress over time with charts
+   - So that: I can see how I'm improving
+   - Status: Basic metrics implemented, charts pending
+
+10. Set Fitness Goals #10 [PLANNED]
+    - As a: User
+    - I want to: Set fitness goals
+    - So that: I can stay motivated and track my achievements
+
+### Social Features
+11. Follow Other Users #11 [COMPLETE]
+    - As a: User
+    - I want to: Follow other users
+    - So that: I can see their workouts and progress
+
+12. View Followed Users' Feed #12 [COMPLETE]
+    - As a: User
+    - I want to: View a feed of workouts from users I follow
+    - So that: I can stay connected and motivated by their activities
+
+## Features Implementation Status
+
+### Complete Features
+- User Registration & Authentication
+- Profile Management
+- Workout Tracking & History
+- Social Features (Following, Likes, Comments)
+- Feed Generation
+- Basic Progress Statistics
+
+### Partially Complete Features
+- Progress Visualization (Basic metrics implemented, charts pending)
+
+### Planned Features
+- Fitness Goals System
+- Advanced Analytics
+- Achievement System
+
+## Database Schema
+
+Our API uses a relational database with the following structure:
+
+```mermaid
+erDiagram
+    User ||--o{ Workout : "has many"
+    User ||--|| UserProfile : "has one"
+    User ||--o{ WorkoutLike : "has many"
+    User ||--o{ WorkoutComment : "has many"
+    User ||--o{ UserFollow : "follows many"
+    Workout ||--o{ WorkoutLike : "has many"
+    Workout ||--o{ WorkoutComment : "has many"
+    
+    User {
+        int id PK
+        string username
+        string email
+        string password
+        datetime last_login
+        boolean is_active
+        datetime date_joined
+    }
+
+    UserProfile {
+        int id PK
+        int user_id FK
+        string name
+        float weight
+        float height
+        text fitness_goals
+        string profile_picture
+        date date_of_birth
+        string gender
+        datetime created_at
+        datetime updated_at
+    }
+
+    Workout {
+        int id PK
+        int user_id FK
+        string workout_type
+        date date_logged
+        int duration
+        int calories
+        text notes
+        string intensity
+        datetime created_at
+        datetime updated_at
+    }
+
+    WorkoutLike {
+        int id PK
+        int user_id FK
+        int workout_id FK
+        datetime created_at
+    }
+
+    WorkoutComment {
+        int id PK
+        int user_id FK
+        int workout_id FK
+        text content
+        datetime created_at
+        datetime updated_at
+    }
+
+    UserFollow {
+        int id PK
+        int follower_id FK
+        int following_id FK
+        datetime created_at
+    }
+```
 
 ## Technical Stack
 
-- **Python:** 3.x
-- **Framework:** Django 5.1.2
-- **API Framework:** Django REST Framework 3.15.2
-- **Database:**
-  - Development: SQLite
-  - Production: PostgreSQL
-- **Authentication:** JWT via djangorestframework-simplejwt
-- **Media Storage:** Cloudinary
-- **Additional Tools:**
-  - django-filter for advanced querying
-  - django-cors-headers for CORS support
-  - whitenoise for static file handling
-  - gunicorn for production serving
+### Core Framework
+- Django 5.1.2
+  - Custom User Model
+  - Extended Profile Model
+  - Social Relations Models
 
-## Installation
+### API Framework
+- Django REST Framework 3.15.2
+  - Custom Viewsets
+  - Nested Serializers
+  - Filter Backends
 
-1. Clone the repository:
+### Authentication
+- JWT via djangorestframework-simplejwt
+  - Token Refresh Mechanism
+  - Custom Authentication Classes
 
-```bash
-git clone <repository-url>
-cd fitness-api
-```
+### Database
+- Development: SQLite
+- Production: PostgreSQL
 
-2.  Create and activate virtual environment:
+### Media Storage
+- Cloudinary
+  - Image optimization
+  - Secure upload
+  - CDN delivery
 
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Create .env file:
-
-```env
-SECRET_KEY=your_secret_key
-DEVELOPMENT=True
-CLOUDINARY_URL=your_cloudinary_url
-DATABASE_URL=your_database_url  # For production
-```
-
-5. Run migrations:
-
-```bash
-python manage.py migrate
-```
-
-6. Start development server:
-
-```bash
-python manage.py runserver
-```
+### Additional Components
+- django-filter for advanced searching
+- django-cors-headers for CORS
+- dj-rest-auth for authentication flows
+- whitenoise for static files
+- Python-dotenv for environment management
 
 ## API Endpoints
 
 ### Authentication
-
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
-- `POST /api/auth/token/` - Obtain JWT token
-- `POST /api/auth/token/refresh/` - Refresh JWT token
-
-### User Profiles
-
-- `GET /api/profiles/me/` - Get current user profile
-- `PUT /api/profiles/update_profile_picture/` - Update profile picture
-- `GET /api/profiles/` - List user profiles (authenticated users only)
-- `PUT/PATCH /api/profiles/{id}/` - Update user profile
-
-### Workouts
-
-- `GET /api/workouts/` - List user's workouts
-- `POST /api/workouts/` - Create new workout
-- `GET /api/workouts/{id}/` - Retrieve specific workout
-- `PUT/PATCH /api/workouts/{id}/` - Update workout
-- `DELETE /api/workouts/{id}/` - Delete workout
-- `GET /api/workouts/summary/` - Get workout statistics
-
-## Models
-
-### UserProfile
-
-```python
-- user (OneToOneField to User)
-- name (CharField)
-- weight (FloatField)
-- height (FloatField)
-- fitness_goals (TextField)
-- profile_picture (CloudinaryField)
-- date_of_birth (DateField)
-- gender (CharField)
+```
+POST   /api/auth/register/       - Register new user
+POST   /api/auth/login/         - Login
+POST   /api/auth/logout/        - Logout
+POST   /api/auth/token/         - Get JWT token
+POST   /api/auth/token/refresh/ - Refresh JWT token
 ```
 
-### Workout
+### Profiles
+```
+GET    /api/profiles/me/                    - Get current user profile
+PUT    /api/profiles/update_profile_picture/ - Update profile picture
+GET    /api/profiles/                       - List profiles
+PUT    /api/profiles/{id}/                  - Update profile
+```
 
-```python
-- user (ForeignKey to User)
-- workout_type (CharField)
-- date_logged (DateField)
-- duration (IntegerField)
-- calories (IntegerField)
-- notes (TextField)
-- intensity (CharField)
+### Workouts
+```
+GET    /api/workouts/         - List workouts
+POST   /api/workouts/         - Create workout
+GET    /api/workouts/{id}/    - Get workout
+PUT    /api/workouts/{id}/    - Update workout
+DELETE /api/workouts/{id}/    - Delete workout
+GET    /api/workouts/summary/ - Get workout stats
+```
+
+### Social
+```
+POST   /api/social/follows/follow/    - Follow user
+POST   /api/social/follows/unfollow/  - Unfollow user
+GET    /api/social/feed/              - Get social feed
+POST   /api/social/likes/             - Like workout
+DELETE /api/social/likes/{id}/        - Unlike workout
+POST   /api/social/comments/          - Comment on workout
+GET    /api/social/comments/{id}/     - Get workout comments
+```
+
+## Installation and Setup
+
+### Prerequisites
+- Python 3.8+
+- pip
+- virtualenv
+- PostgreSQL (for production)
+
+### Development Setup
+1. Clone and Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd fitness-api
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# Unix/MacOS:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+2. Environment Configuration
+```env
+SECRET_KEY=your_secret_key
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=sqlite:///db.sqlite3
+CLOUDINARY_URL=your_cloudinary_url
+CORS_ORIGIN_WHITELIST=http://localhost:3000
+```
+
+3. Database Setup
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
 ```
 
 ## Testing
 
-Run the test suite:
-
 ```bash
+# Run all tests
 python manage.py test
+
+# Run specific tests
+python manage.py test social.tests.SocialFeatureTests
+
+# Coverage report
+coverage run manage.py test
+coverage report
 ```
-
-The project includes comprehensive tests for:
-
-- Models
-- Serializers
-- Views
-- API endpoints
-- Permissions
-
-## Security Features
-
-- JWT Authentication
-- Custom permission classes for object ownership
-- CORS configuration
-- SSL/TLS support
-- Secure cookie handling
-- CSRF protection
-- HTTP Strict Transport Security (HSTS)
-
-## Development Features
-
-- Detailed error logging
-- Django Debug Toolbar in development
-- Comprehensive test coverage
-- DRF browsable API
-- Filtering and search capabilities
-
-## Production Deployment
-
-1. Update .env with production settings:
-
-```env
-DEVELOPMENT=False
-DATABASE_URL=your_production_db_url
-CLOUDINARY_URL=your_cloudinary_url
-```
-
-2. Configure production settings:
-
-- SSL/TLS certificates
-- ALLOWED_HOSTS
-- Static file serving
-- Database configuration
-
-3. Additional security measures enabled in production:
-
-- Secure SSL redirect
-- Secure cookies
-- HSTS
-- CSRF protection
-
-## API Documentation
-
-The API provides built-in documentation through the Django REST Framework browsable API interface, accessible when running the server in development mode.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
+```bash
+git checkout -b feature/your-feature-name
+```
 3. Commit your changes
+```bash
+git commit -m "type(scope): description"
+```
 4. Push to the branch
 5. Create a Pull Request
 
 ## License
 
 [Your chosen license]
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact [contact information].
