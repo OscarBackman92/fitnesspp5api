@@ -99,12 +99,11 @@ def api_root(request, format=None):
     })
 
 class GoalViewSet(viewsets.ModelViewSet):
+    queryset = Goal.objects.all()  # Changed this
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend]
     filterset_fields = ['type', 'deadline']
-    search_fields = ['description', 'target']
-    ordering_fields = ['deadline', 'created_at']
 
     def get_queryset(self):
         return Goal.objects.filter(user=self.request.user)
@@ -113,24 +112,14 @@ class GoalViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class MeasurementViewSet(viewsets.ModelViewSet):
+    queryset = Measurement.objects.all()  # Changed this
     serializer_class = MeasurementSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend]
     filterset_fields = ['type', 'date']
-    search_fields = ['notes']
-    ordering_fields = ['date', 'value']
 
     def get_queryset(self):
         return Measurement.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=['get'])
-    def history(self, request):
-        measurements = self.get_queryset()
-        measurement_type = request.query_params.get('type')
-        if measurement_type:
-            measurements = measurements.filter(type=measurement_type)
-        serializer = self.get_serializer(measurements, many=True)
-        return Response(serializer.data)
