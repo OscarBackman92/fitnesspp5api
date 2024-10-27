@@ -53,6 +53,7 @@ class Goal(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = 'api'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -78,6 +79,7 @@ class Measurement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = 'api'
         ordering = ['-date', '-created_at']
 
     def __str__(self):
