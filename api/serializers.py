@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from cloudinary.utils import cloudinary_url
-from .models import UserProfile
+from .models import UserProfile, Goal, Measurement
 from django.db import IntegrityError
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -94,3 +94,25 @@ class UserInfoSerializer(serializers.ModelSerializer):
         if ret['age'] is None:
             ret.pop('age')
         return ret
+
+class GoalSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+
+    class Meta:
+        model = Goal
+        fields = [
+            'id', 'type', 'type_display', 'description', 
+            'target', 'deadline', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class MeasurementSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+
+    class Meta:
+        model = Measurement
+        fields = [
+            'id', 'type', 'type_display', 'value', 
+            'date', 'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
