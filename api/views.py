@@ -85,12 +85,13 @@ def api_root(request, format=None):
     return Response({
         'profiles': reverse('profile-list', request=request, format=format),
         'workouts': reverse('workout-list', request=request, format=format),
+        'goals': reverse('goal-list', request=request, format=format),
+        'measurements': reverse('measurement-list', request=request, format=format),
         'register': reverse('rest_register', request=request, format=format),
         'login': reverse('rest_login', request=request, format=format),
         'logout': reverse('rest_logout', request=request, format=format),
         'token': reverse('token_obtain_pair', request=request, format=format),
         'token_refresh': reverse('token_refresh', request=request, format=format),
-        # Add social endpoints
         'social_feed': reverse('social-feed', request=request, format=format),
         'follows': reverse('social-follow-list', request=request, format=format),
         'likes': reverse('social-like-list', request=request, format=format),
