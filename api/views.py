@@ -99,6 +99,7 @@ def api_root(request, format=None):
     })
 
 class GoalViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Goal.objects.all()  # Changed this
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -112,6 +113,7 @@ class GoalViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class MeasurementViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Measurement.objects.all()  # Changed this
     serializer_class = MeasurementSerializer
     permission_classes = [permissions.IsAuthenticated]
