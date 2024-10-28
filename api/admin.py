@@ -1,6 +1,6 @@
 # api/admin.py
 from django.contrib import admin
-from .models import UserProfile, Goal, Measurement
+from .models import UserProfile, Goal
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -15,11 +15,3 @@ class GoalAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'description', 'target')
     readonly_fields = ('created_at', 'updated_at')
     ordering = ('-created_at',)
-
-@admin.register(Measurement)
-class MeasurementAdmin(admin.ModelAdmin):
-    list_display = ('user', 'type', 'value', 'date', 'created_at')
-    list_filter = ('type', 'date', 'created_at')
-    search_fields = ('user__username', 'notes')
-    readonly_fields = ('created_at', 'updated_at')
-    ordering = ('-date', '-created_at')

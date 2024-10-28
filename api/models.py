@@ -58,29 +58,3 @@ class Goal(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.get_type_display()}"
-
-class Measurement(models.Model):
-    MEASUREMENT_TYPES = [
-        ('weight', 'Weight'),
-        ('chest', 'Chest'),
-        ('waist', 'Waist'),
-        ('hips', 'Hips'),
-        ('biceps', 'Biceps'),
-        ('thighs', 'Thighs'),
-        ('calves', 'Calves')
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='measurements')
-    type = models.CharField(max_length=50, choices=MEASUREMENT_TYPES)
-    value = models.FloatField()
-    date = models.DateField(default=timezone.now)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        app_label = 'api'
-        ordering = ['-date', '-created_at']
-
-    def __str__(self):
-        return f"{self.user.username} - {self.get_type_display()}: {self.value}"

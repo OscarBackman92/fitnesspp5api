@@ -6,8 +6,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.reverse import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import UserProfile, Goal, Measurement
-from .serializers import UserProfileSerializer, UserRegistrationSerializer, UserInfoSerializer, GoalSerializer, MeasurementSerializer
+from .models import UserProfile, Goal
+from .serializers import UserProfileSerializer, UserRegistrationSerializer, UserInfoSerializer, GoalSerializer
 from .permissions import IsOwnerOrReadOnly
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,6 @@ def api_root(request, format=None):
         'profiles': reverse('profile-list', request=request, format=format),
         'workouts': reverse('workout-list', request=request, format=format),
         'goals': reverse('goal-list', request=request, format=format),
-        'measurements': reverse('measurement-list', request=request, format=format),
         'register': reverse('rest_register', request=request, format=format),
         'login': reverse('rest_login', request=request, format=format),
         'logout': reverse('rest_logout', request=request, format=format),
@@ -114,15 +113,3 @@ class GoalViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         print("Create request data:", request.data)  # Debug print
         return super().create(request, *args, **kwargs)
-
-class MeasurementViewSet(viewsets.ModelViewSet):
-    serializer_class = MeasurementSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        print("Getting measurements for user:", self.request.user)  # Debug print
-        return Measurement.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        print("Creating measurement for user:", self.request.user)  # Debug print
-        serializer.save(user=self.request.user)
