@@ -96,23 +96,13 @@ class UserInfoSerializer(serializers.ModelSerializer):
         return ret
 
 class GoalSerializer(serializers.ModelSerializer):
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
-
     class Meta:
         model = Goal
-        fields = [
-            'id', 'type', 'type_display', 'description', 
-            'target', 'deadline', 'created_at', 'updated_at'
-        ]
+        fields = ['id', 'type', 'description', 'target', 'deadline', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class MeasurementSerializer(serializers.ModelSerializer):
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
-
     class Meta:
         model = Measurement
-        fields = [
-            'id', 'type', 'type_display', 'value', 
-            'date', 'notes', 'created_at', 'updated_at'
-        ]
+        fields = ['id', 'type', 'value', 'date', 'notes', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

@@ -103,27 +103,25 @@ class GoalViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        print("Getting goals for user:", self.request.user)  # Debug print
         return Goal.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        print("Creating goal for user:", self.request.user)  # Debug print
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
-    def summary(self, request):
-        goals = self.get_queryset()
-        serializer = self.get_serializer(goals, many=True)
-        return Response(serializer.data)
+    def create(self, request, *args, **kwargs):
+        print("Create request data:", request.data)  # Debug print
+        return super().create(request, *args, **kwargs)
 
 class MeasurementViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    queryset = Measurement.objects.all()  # Changed this
     serializer_class = MeasurementSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['type', 'date']
 
     def get_queryset(self):
+        print("Getting measurements for user:", self.request.user)  # Debug print
         return Measurement.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        print("Creating measurement for user:", self.request.user)  # Debug print
         serializer.save(user=self.request.user)
