@@ -99,18 +99,20 @@ def api_root(request, format=None):
     })
 
 class GoalViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    queryset = Goal.objects.all()  # Changed this
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['type', 'deadline']
 
     def get_queryset(self):
         return Goal.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        goals = self.get_queryset()
+        serializer = self.get_serializer(goals, many=True)
+        return Response(serializer.data)
 
 class MeasurementViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
