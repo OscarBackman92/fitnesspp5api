@@ -101,6 +101,7 @@ def api_root(request, format=None):
 class GoalViewSet(viewsets.ModelViewSet):
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         print("Getting goals for user:", self.request.user)  # Debug print
