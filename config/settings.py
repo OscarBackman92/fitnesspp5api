@@ -238,3 +238,5 @@ LOGGING = {
 
 # Print debug status
 print(f"DEBUG mode is: {DEBUG}")
+
+ROOT_URLCONF = 'config.urls'
