@@ -77,7 +77,7 @@ class UserRegistrationView(generics.CreateAPIView):
             return Response({
                 "user": UserRegistrationSerializer(user, context=self.get_serializer_context()).data,
                 "message": "User Created Successfully. Now perform Login to get your token",
-            }, status=status.HTTP_201_CREATED)  # Changed status code to 201
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
