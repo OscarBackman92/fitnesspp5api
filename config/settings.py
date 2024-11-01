@@ -3,34 +3,57 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security Settings
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1'] if DEBUG else ['.herokuapp.com']
 
-# Database optimization
-if 'test' not in sys.argv and 'DATABASE_URL' in os.environ:
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=60,
-            conn_health_checks=True,
-            ssl_require=not DEBUG
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-            'CONN_MAX_AGE': 60,
-        }
-    }
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-csrftoken',
+    'authorization'
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -58,9 +81,8 @@ INSTALLED_APPS = [
     'social.apps.SocialConfig',
 ]
 
-# Middleware configuration
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be first
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -73,56 +95,27 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 ]
 
-# CORS Configuration
-CORS_ALLOW_CREDENTIALS = True
-CORS_PREFLIGHT_MAX_AGE = 86400
+ROOT_URLCONF = 'config.urls'
 
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_EXPOSE_HEADERS = [
-    'content-type',
-    'x-csrftoken',
-    'authorization'
-]
-
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://frontendfitness-e0476c66fecb.herokuapp.com",
-    ]
+# Database configuration
+if 'test' not in sys.argv and 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=60,
+            conn_health_checks=True,
+            ssl_require=not DEBUG
+        )
+    }
 else:
-    CORS_ALLOWED_ORIGINS = [
-        "https://frontendfitness-e0476c66fecb.herokuapp.com",
-    ]
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 60,
+        }
+    }
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://frontendfitness-e0476c66fecb.herokuapp.com",
-]
-
-# Templates
+# Templates configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -148,27 +141,30 @@ TEMPLATES = [
     },
 ]
 
-# Static files
+# Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MAX_AGE = 31536000
 
-# Media files
+# Media files configuration
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Cloudinary
+# Cloudinary configuration
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
     'CLOUDINARY_API_PROXY': None,
     'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg'],
+    'MAGIC_FILE_PATH': None,
+    'INVALID_VIDEO_ERROR_MESSAGE': '',
     'TIMEOUT': 30,
 }
 
-# REST Framework
+# REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -183,12 +179,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-}
-
-# Auth settings
-REST_AUTH = {
-    'USE_JWT': False,
-    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
 }
 
 # Security settings
@@ -206,6 +204,14 @@ else:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+# Authentication settings
+REST_AUTH = {
+    'USE_JWT': False,
+    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
+}
+
+SITE_ID = 1
 
 # Cache settings
 CACHES = {
@@ -226,11 +232,14 @@ SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = False
 
-# Site settings
-SITE_ID = 1
-ROOT_URLCONF = 'config.urls'
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com",
+]
 
-# Logging
+# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
