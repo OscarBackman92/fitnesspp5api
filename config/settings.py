@@ -108,25 +108,51 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 ]
 
-# CORS settings
+# CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True if not DEBUG else False
+SESSION_COOKIE_SECURE = True if not DEBUG else False
+
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
-    CSRF_TRUSTED_ORIGINS = [
+    CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://frontendfitness-e0476c66fecb.herokuapp.com",
     ]
 else:
     CORS_ALLOWED_ORIGINS = [
         "https://frontendfitness-e0476c66fecb.herokuapp.com",
-        "http://localhost:3000",
     ]
-    CORS_ALLOW_CREDENTIALS = True
-    CSRF_TRUSTED_ORIGINS = [
-        "https://frontendfitness-e0476c66fecb.herokuapp.com",
-        "http://localhost:3000",
-    ]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Important: Add these settings
+CORS_EXPOSE_HEADERS = ['content-type', 'x-csrftoken']
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com",
+]
 
 # Template settings optimization
 TEMPLATES = [
