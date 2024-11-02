@@ -16,12 +16,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1'] if DEBUG else ['.herokuapp.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com'] if DEBUG else ['.herokuapp.com']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://frontendfitness-e0476c66fecb.herokuapp.com",
+    "https://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://127.0.0.1:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -56,6 +59,9 @@ CORS_EXPOSE_HEADERS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
+    "https://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://127.0.0.1:3000",
     "https://frontendfitness-e0476c66fecb.herokuapp.com"
 ]
 
