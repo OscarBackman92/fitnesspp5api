@@ -16,7 +16,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com'] if DEBUG else ['.herokuapp.com']
+# Update ALLOWED_HOSTS to include both development and production hosts
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -54,9 +55,12 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 CORS_EXPOSE_HEADERS = [
     'content-type',
     'x-csrftoken',
-    'authorization'
+    'authorization',
+    'access-control-allow-origin',
+    'access-control-allow-credentials'
 ]
 
+# Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "https://localhost:3000",
@@ -88,11 +92,12 @@ INSTALLED_APPS = [
     'django_filters',
     'api',
     'workouts',
-    'social',
+    'social.apps.SocialConfig',
 ]
 
+# Updated middleware with correct order
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -242,13 +247,6 @@ SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = False
 
-# CSRF settings
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://frontendfitness-e0476c66fecb.herokuapp.com",
-]
-
 # Logging configuration
 LOGGING = {
     'version': 1,
@@ -273,7 +271,15 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'ERROR',
         },
+        'corsheaders': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
     },
 }
 
-print(f"DEBUG mode is: {DEBUG}")
+# Debug settings
+if DEBUG:
+    print(f"DEBUG mode is: {DEBUG}")
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ORIGIN_ALLOW_ALL = True
