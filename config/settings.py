@@ -17,7 +17,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
 # Update ALLOWED_HOSTS to include both development and production hosts
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
+ALLOWED_HOSTS = ['http://localhost:3000', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
