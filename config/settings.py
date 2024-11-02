@@ -54,6 +54,11 @@ CORS_EXPOSE_HEADERS = [
     'authorization'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://frontendfitness-e0476c66fecb.herokuapp.com"
+]
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
