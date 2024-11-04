@@ -1,5 +1,3 @@
-# api/utils.py
-
 from functools import wraps
 from django.core.cache import cache
 from django.db import transaction
@@ -82,13 +80,11 @@ def cache_response(timeout: int = 300, key_prefix: str = ''):
     def decorator(func):
         @wraps(func)
         def wrapper(self, request, *args, **kwargs):
-            # Create a unique cache key based on the request
             cache_key = (
                 f"{key_prefix}:{request.path}:"
                 f"{request.query_params}:{request.user.id}"
             )
             
-            # Try to get the response from cache
             response = cache.get(cache_key)
             
             if response is None:

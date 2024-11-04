@@ -1,5 +1,3 @@
-# api/models.py
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -105,7 +103,7 @@ class Goal(models.Model):
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE,
-        related_name='goals'  # This matches the prefetch_related in the view
+        related_name='goals'
     )
     type = models.CharField(max_length=50, choices=GOAL_TYPES)
     description = models.TextField()

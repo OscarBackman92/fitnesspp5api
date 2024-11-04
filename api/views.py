@@ -79,15 +79,14 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         Get queryset with optimized database queries
         """
         queryset = UserProfile.objects.select_related('user').prefetch_related(
-            'user__workouts',  # This is correct if Workout model has ForeignKey to User
-            'user__goals'      # This is correct if Goal model has ForeignKey to User
+            'user__workouts',
+            'user__goals'
         ).annotate(
             workouts_count=Count('user__workouts', distinct=True),
             avg_workout_duration=Avg('user__workouts__duration'),
             total_calories=Sum('user__workouts__calories')
         )
 
-        # Handle search
         search_query = self.request.query_params.get('search', '')
         if search_query:
             queryset = queryset.filter(
@@ -155,10 +154,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             if instance.profile_image:
                 old_image = instance.profile_image
 
-            # Save new image
             instance = serializer.save()
 
-            # Delete old image if it exists and is not the default
             if old_image and 'default_profile_image' not in str(old_image):
                 try:
                     old_image.delete()
@@ -190,7 +187,6 @@ class GoalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Goal.objects.filter(user=self.request.user)
         
-        # Filter by status
         status = self.request.query_params.get('status', None)
         if status:
             if status == 'completed':
@@ -198,7 +194,6 @@ class GoalViewSet(viewsets.ModelViewSet):
             elif status == 'active':
                 queryset = queryset.filter(completed=False)
 
-        # Filter by date range
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
         if start_date and end_date:

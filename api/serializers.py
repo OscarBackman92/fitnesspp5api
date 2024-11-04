@@ -60,7 +60,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def validate_profile_image(self, value):
         if value:
-            if value.size > 2 * 1024 * 1024:  # 2MB limit
+            if value.size > 2 * 1024 * 1024:
                 raise serializers.ValidationError(
                     'Image size cannot exceed 2MB'
                 )
