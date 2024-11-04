@@ -12,7 +12,11 @@ class Workout(models.Model):
         ('other', 'Other'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workouts'
+    )
     workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES)
     date_logged = models.DateField(default=timezone.now)
     duration = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)])  # max 24 hours

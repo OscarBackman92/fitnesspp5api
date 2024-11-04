@@ -1,103 +1,152 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from cloudinary.utils import cloudinary_url
 from .models import UserProfile, Goal
 from django.db import IntegrityError
+from cloudinary.utils import cloudinary_url
+from django.utils import timezone
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    age = serializers.IntegerField(read_only=True)
-    bmi = serializers.FloatField(source='calculate_bmi', read_only=True)
-    profile_picture = serializers.SerializerMethodField()
+    username = serializers.ReadOnlyField(source='user.username')
+    email = serializers.ReadOnlyField(source='user.email')
+    profile_image = serializers.SerializerMethodField()
+    bmi = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
+    workouts_count = serializers.IntegerField(read_only=True)
+    avg_workout_duration = serializers.FloatField(read_only=True)
+    goals = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'name', 'weight', 'height', 'fitness_goals', 'date_of_birth', 'age', 'bmi', 'profile_picture', 'created_at', 'updated_at', 'gender']
+        fields = [
+            'id', 'username', 'email', 'name', 'weight', 'height',
+            'bmi', 'age', 'fitness_goals', 'profile_image',
+            'date_of_birth', 'created_at', 'updated_at', 'gender',
+            'is_owner', 'workouts_count', 'avg_workout_duration',
+            'goals'
+        ]
+        read_only_fields = ['user', 'created_at', 'updated_at']
+
+    def get_goals(self, obj):
+        """Get user's goals"""
+        return GoalSerializer(obj.user.goals.all(), many=True).data
+
+    def get_is_owner(self, obj):
+        request = self.context.get('request')
+        return request and request.user == obj.user
+
+    def get_profile_image(self, obj):
+        if obj.profile_image:
+            try:
+                url, options = cloudinary_url(
+                    str(obj.profile_image),
+                    format='webp',
+                    transformation=[
+                        {'width': 200, 'height': 200, 'crop': 'fill', 'gravity': 'face'},
+                        {'quality': 'auto:eco'},
+                        {'fetch_format': 'auto'}
+                    ]
+                )
+                return url
+            except Exception as e:
+                return None
+        return None
+
+    def get_bmi(self, obj):
+        return obj.calculate_bmi()
+
+    def get_age(self, obj):
+        return obj.get_age()
+
+    def validate_profile_image(self, value):
+        if value:
+            if value.size > 2 * 1024 * 1024:  # 2MB limit
+                raise serializers.ValidationError(
+                    'Image size cannot exceed 2MB'
+                )
+            allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed_types:
+                raise serializers.ValidationError(
+                    'Only JPEG, PNG and WebP images are allowed'
+                )
+        return value
+
+class GoalSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    days_remaining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Goal
+        fields = [
+            'id', 'type', 'type_display', 'description', 'target',
+            'deadline', 'completed', 'created_at', 'updated_at',
+            'is_owner', 'days_remaining'
+        ]
         read_only_fields = ['created_at', 'updated_at']
 
-    def get_profile_picture(self, obj):
-        if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
-            return obj.profile_picture.url
-        else:
-            default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
-                                                        format="jpg", 
-                                                        crop="fill", 
-                                                        width=200, 
-                                                        height=200)
-            return default_image_url
+    def get_is_owner(self, obj):
+        request = self.context.get('request')
+        return request and request.user == obj.user
 
-    def update(self, instance, validated_data):
-        profile_picture = validated_data.pop('profile_picture', None)
-        if profile_picture:
-            instance.profile_picture = profile_picture
-        return super().update(instance, validated_data)
+    def get_days_remaining(self, obj):
+        if obj.deadline:
+            today = timezone.now().date()
+            days = (obj.deadline - today).days
+            return max(0, days)
+        return None
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(required=False)
-    password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'profile']
+        fields = ('username', 'email', 'password', 'password2')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate(self, data):
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError({
+                "password": "Passwords don't match"
+            })
+        return data
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "A user with that email already exists."
+            )
+        return value
 
     def create(self, validated_data):
-        profile_data = validated_data.pop('profile', {})
-        password = validated_data.pop('password')
+        validated_data.pop('password2')
         try:
-            user = User.objects.create_user(**validated_data)
-            user.set_password(password)
-            user.save()
-            UserProfile.objects.create(user=user, **profile_data)
+            user = User.objects.create_user(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                password=validated_data['password']
+            )
             return user
         except IntegrityError as e:
             if 'unique constraint' in str(e).lower():
                 if 'username' in str(e).lower():
-                    raise serializers.ValidationError({"username": "A user with that username already exists."})
-                elif 'email' in str(e).lower():
-                    raise serializers.ValidationError({"email": "A user with that email already exists."})
+                    raise serializers.ValidationError({
+                        "username": "A user with that username already exists."
+                    })
             raise
 
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret['profile'] = UserProfileSerializer(instance.userprofile).data
-        return ret
-
 class UserInfoSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
-    bmi = serializers.FloatField(read_only=True)
-    age = serializers.IntegerField(read_only=True)
-    profile_picture = serializers.SerializerMethodField()
+    profile = UserProfileSerializer(read_only=True)
+    goals = GoalSerializer(many=True, read_only=True)
+    total_workouts = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = UserProfile
-        fields = ['username', 'email', 'name', 'weight', 'height', 'fitness_goals', 
-                  'date_of_birth', 'created_at', 'updated_at', 'gender', 'bmi', 'age', 'profile_picture']
-        read_only_fields = ['created_at', 'updated_at']
-
-    def get_profile_picture(self, obj):
-        if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
-            return obj.profile_picture.url
-        else:
-            default_image_url, options = cloudinary_url("default_profile_ylwpgw", 
-                                                        format="jpg", 
-                                                        crop="fill", 
-                                                        width=200, 
-                                                        height=200)
-            return default_image_url
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret['bmi'] = instance.calculate_bmi()
-        ret['age'] = instance.age()
-        if ret['bmi'] is None:
-            ret.pop('bmi')
-        if ret['age'] is None:
-            ret.pop('age')
-        return ret
-
-class GoalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Goal
-        fields = ['id', 'type', 'description', 'target', 'deadline', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
+        model = User
+        fields = [
+            'id', 'username', 'email', 'profile', 'goals',
+            'total_workouts', 'date_joined', 'last_login'
+        ]
+        read_only_fields = ['date_joined', 'last_login']
