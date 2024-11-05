@@ -1,5 +1,4 @@
 import logging
-import traceback
 from django.db.models import Sum, Avg, Count, Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -43,6 +42,8 @@ class UserRegistrationView(generics.CreateAPIView):
         if serializer.is_valid():
             try:
                 user = serializer.save()
+                # Automatically create UserProfile for the new user
+                UserProfile.objects.create(user=user)
                 return Response({
                     "user": UserRegistrationSerializer(
                         user, 
@@ -100,12 +101,12 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         """Create a new profile"""
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['GET'])
-    def stats(self, request):
+    @action(detail=True, methods=['GET'])
+    def stats(self, request, pk=None):
         """
-        Get user profile statistics
+        Get user profile statistics for a specific profile
         """
-        profile = get_object_or_404(UserProfile, user=request.user)
+        profile = get_object_or_404(UserProfile, pk=pk)
         stats = {
             'total_workouts': profile.user.workouts.count(),
             'total_calories': profile.user.workouts.aggregate(
