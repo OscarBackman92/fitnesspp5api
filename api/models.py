@@ -124,6 +124,16 @@ class Goal(models.Model):
     def __str__(self):
         return f"{self.user.username}'s {self.get_type_display()} goal"
 
+    def calculate_progress(self):
+        """Method to calculate goal progress based on completion and deadline"""
+        if self.completed:
+            return 100
+        if self.deadline:
+            days_total = (self.deadline - self.created_at.date()).days
+            days_passed = (timezone.now().date() - self.created_at.date()).days
+            return min(int((days_passed / days_total) * 100), 100) if days_total > 0 else 0
+        return 0
+
 def create_user_profile(sender, instance, created, **kwargs):
     """Signal to create user profile when user is created"""
     if created:

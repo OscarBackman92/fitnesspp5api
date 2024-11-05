@@ -4,12 +4,30 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 class Workout(models.Model):
+    # Workout types as class constants
+    CARDIO = 'cardio'
+    STRENGTH = 'strength'
+    FLEXIBILITY = 'flexibility'
+    SPORTS = 'sports'
+    OTHER = 'other'
+
     WORKOUT_TYPES = [
-        ('cardio', 'Cardio'),
-        ('strength', 'Strength Training'),
-        ('flexibility', 'Flexibility'),
-        ('sports', 'Sports'),
-        ('other', 'Other'),
+        (CARDIO, 'Cardio'),
+        (STRENGTH, 'Strength Training'),
+        (FLEXIBILITY, 'Flexibility'),
+        (SPORTS, 'Sports'),
+        (OTHER, 'Other'),
+    ]
+
+    # Intensity levels as class constants
+    LOW = 'low'
+    MODERATE = 'moderate'
+    HIGH = 'high'
+
+    INTENSITY_LEVELS = [
+        (LOW, 'Low'),
+        (MODERATE, 'Moderate'),
+        (HIGH, 'High'),
     ]
 
     user = models.ForeignKey(
@@ -19,18 +37,29 @@ class Workout(models.Model):
     )
     workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES)
     date_logged = models.DateField(default=timezone.now)
-    duration = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)])  # max 24 hours
-    calories = models.IntegerField(validators=[MinValueValidator(0)])
+    duration = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(1440)],  # max 24 hours
+        help_text="Duration in minutes"
+    )
+    calories = models.IntegerField(
+        validators=[MinValueValidator(0)],
+        help_text="Calories burned"
+    )
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    intensity = models.CharField(max_length=20, choices=[('low', 'Low'), ('moderate', 'Moderate'), ('high', 'High')], default='moderate')
+    intensity = models.CharField(
+        max_length=20,
+        choices=INTENSITY_LEVELS,
+        default=MODERATE
+    )
 
     class Meta:
         ordering = ['-date_logged', '-created_at']
 
     def __str__(self):
-        return f"{self.user.username} - {self.get_workout_type_display()} on {self.date_logged}"
+        return f"{self.user.username} - {self.get_workout_type_display()} ({self.intensity}) on {self.date_logged}"
 
     def get_duration_in_hours(self):
-        return self.duration / 60
+        """Convert duration from minutes to hours."""
+        return round(self.duration / 60, 2)

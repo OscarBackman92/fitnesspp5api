@@ -14,6 +14,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     workouts_count = serializers.IntegerField(read_only=True)
     avg_workout_duration = serializers.FloatField(read_only=True)
+    total_calories = serializers.IntegerField(read_only=True)
     goals = serializers.SerializerMethodField()
 
     class Meta:
@@ -23,12 +24,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'bmi', 'age', 'fitness_goals', 'profile_image',
             'date_of_birth', 'created_at', 'updated_at', 'gender',
             'is_owner', 'workouts_count', 'avg_workout_duration',
-            'goals'
+            'total_calories', 'goals'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
 
     def get_goals(self, obj):
-        """Get user's goals"""
+        """Get user's goals with progress information"""
         return GoalSerializer(obj.user.goals.all(), many=True).data
 
     def get_is_owner(self, obj):
@@ -75,13 +76,14 @@ class GoalSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     days_remaining = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Goal
         fields = [
             'id', 'type', 'type_display', 'description', 'target',
             'deadline', 'completed', 'created_at', 'updated_at',
-            'is_owner', 'days_remaining'
+            'is_owner', 'days_remaining', 'progress'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
@@ -95,6 +97,10 @@ class GoalSerializer(serializers.ModelSerializer):
             days = (obj.deadline - today).days
             return max(0, days)
         return None
+
+    def get_progress(self, obj):
+        """Calculate the goal progress"""
+        return obj.calculate_progress()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -142,11 +148,12 @@ class UserInfoSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     goals = GoalSerializer(many=True, read_only=True)
     total_workouts = serializers.IntegerField(read_only=True)
+    total_calories = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'profile', 'goals',
-            'total_workouts', 'date_joined', 'last_login'
+            'total_workouts', 'total_calories', 'date_joined', 'last_login'
         ]
         read_only_fields = ['date_joined', 'last_login']

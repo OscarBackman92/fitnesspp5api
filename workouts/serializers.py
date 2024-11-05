@@ -3,6 +3,7 @@ from .models import Workout
 
 class WorkoutSerializer(serializers.ModelSerializer):
     workout_type_display = serializers.CharField(source='get_workout_type_display', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
     is_liked = serializers.SerializerMethodField()
@@ -10,15 +11,15 @@ class WorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workout
         fields = [
-            'id', 'user', 'workout_type', 'workout_type_display',
-            'date_logged', 'duration', 'calories', 'notes',
-            'created_at', 'updated_at', 'intensity',
-            'likes_count', 'comments_count', 'is_liked'  # Added missing fields
+            'id', 'user', 'user_username', 'workout_type', 'workout_type_display',
+            'date_logged', 'duration', 'calories', 'notes', 'created_at', 'updated_at',
+            'intensity', 'likes_count', 'comments_count', 'is_liked'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
     def get_is_liked(self, obj):
+        """Check if the current user has liked this workout."""
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
-        return False
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.likes.filter(user=request.user).exists()
