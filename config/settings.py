@@ -300,6 +300,30 @@ LOGGING = {
         },
     },
 }
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'  # Or your email host
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+# dj-rest-auth settings
+REST_AUTH = {
+    'USE_JWT': False,
+    'JWT_AUTH_COOKIE': None,
+    'JWT_AUTH_REFRESH_COOKIE': None,
+    'USER_DETAILS_SERIALIZER': 'api.serializers.UserInfoSerializer',
+    # Disable email verification temporarily
+    'REGISTER_VERIFICATION_ENABLED': False,
+    'LOGIN_VERIFICATION_ENABLED': False,
+}
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Options: 'mandatory', 'optional', or 'none'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
 if DEBUG:
     INSTALLED_APPS += ['debug_toolbar']
