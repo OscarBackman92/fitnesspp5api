@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from cloudinary.models import CloudinaryField
 
 class Workout(models.Model):
     # Workout types as class constants
@@ -52,6 +53,17 @@ class Workout(models.Model):
         max_length=20,
         choices=INTENSITY_LEVELS,
         default=MODERATE
+    )
+    image = CloudinaryField(
+        'image',
+        folder='workout_images',
+        blank=True,
+        null=True,
+        transformation={
+            'quality': 'auto:eco',
+            'crop': 'fill',
+            'aspect_ratio': '16:9'
+        }
     )
 
     class Meta:

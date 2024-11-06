@@ -20,20 +20,36 @@ class UserFollow(models.Model):
             raise ValidationError("Users cannot follow themselves.")
 
 class WorkoutLike(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workout_likes'
+    )
+    workout = models.ForeignKey(
+        'workouts.Workout',  # Fixed: Properly reference the Workout model
+        on_delete=models.CASCADE,
+        related_name='likes'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'workout')
+        unique_together = ['user', 'workout']
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.user.username} likes {self.workout}'
+        return f"{self.user.username} likes {self.workout}"
 
 class WorkoutComment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workout_comments'
+    )
+    workout = models.ForeignKey(
+        'workouts.Workout',  # Fixed: Properly reference the Workout model
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -42,4 +58,4 @@ class WorkoutComment(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Comment by {self.user.username} on {self.workout}'
+        return f"Comment by {self.user.username} on {self.workout}"

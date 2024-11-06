@@ -1,30 +1,50 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from .models import UserFollow, WorkoutLike, WorkoutComment
 from workouts.serializers import WorkoutSerializer
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'profile_image']
+
+    def get_profile_image(self, obj):
+        if hasattr(obj, 'profile') and obj.profile.profile_image:
+            return str(obj.profile.profile_image)
+        return None
+
 class UserFollowSerializer(serializers.ModelSerializer):
-    follower_username = serializers.CharField(source='follower.username', read_only=True)
-    following_username = serializers.CharField(source='following.username', read_only=True)
+    follower = UserBasicSerializer(read_only=True)
+    following = UserBasicSerializer(read_only=True)
 
     class Meta:
         model = UserFollow
-        fields = ['id', 'follower', 'following', 'follower_username', 
-                 'following_username', 'created_at']
-        read_only_fields = ['created_at']
+        fields = [
+            'id', 'follower', 'following', 'created_at'
+        ]
+        read_only_fields = ['follower']
 
 class WorkoutLikeSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
+    user = UserBasicSerializer(read_only=True)
+    workout = WorkoutSerializer(read_only=True)
 
     class Meta:
         model = WorkoutLike
-        fields = ['id', 'user', 'workout', 'username', 'created_at']
-        read_only_fields = ['created_at']
+        fields = [
+            'id', 'user', 'workout', 'created_at'
+        ]
+        read_only_fields = ['user']
 
 class WorkoutCommentSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-
+    user = UserBasicSerializer(read_only=True)
+    workout = WorkoutSerializer(read_only=True)
+    
     class Meta:
         model = WorkoutComment
-        fields = ['id', 'user', 'workout', 'content', 'username', 
-                 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at', 'user']
+        fields = [
+            'id', 'user', 'workout', 'content',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['user']

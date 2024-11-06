@@ -1,15 +1,16 @@
+# social/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-app_name = 'social'
-
 router = DefaultRouter()
-router.register(r'follows', views.UserFollowViewSet, basename='social-follow')
-router.register(r'likes', views.WorkoutLikeViewSet, basename='social-like')
-router.register(r'comments', views.WorkoutCommentViewSet, basename='social-comment')
+router.register(r'follows', views.UserFollowViewSet, basename='follow')
+router.register(r'likes', views.WorkoutLikeViewSet, basename='like')
+router.register(r'comments', views.WorkoutCommentViewSet, basename='comment')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('feed/', views.SocialFeedView.as_view(), name='social-feed'),
+    path('toggle-follow/', 
+         views.UserFollowViewSet.as_view({'post': 'toggle_follow'}),
+         name='toggle-follow'),
 ]
