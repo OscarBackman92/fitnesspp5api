@@ -4,11 +4,10 @@ from . import views
 
 app_name = 'workouts'
 
-# Set up the DefaultRouter for WorkoutViewSet
 router = DefaultRouter()
-router.register(r'workouts', views.WorkoutViewSet, basename='workout')
+router.register(r'', views.WorkoutViewSet, basename='workout')
 
-# Define URL patterns with router URLs included
+# Add any additional routes on top of the router URLs
 urlpatterns = [
     path('', include(router.urls)),
 ]
