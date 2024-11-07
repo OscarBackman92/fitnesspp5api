@@ -2,12 +2,13 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from .models import UserFollow, WorkoutLike, WorkoutComment
 from .serializers import UserFollowSerializer, WorkoutLikeSerializer, WorkoutCommentSerializer
 from workouts.models import Workout
+from workouts.serializers import WorkoutSerializer
 from api.permissions import IsOwnerOrReadOnly
 
 class UserFollowViewSet(viewsets.ModelViewSet):
@@ -15,10 +16,7 @@ class UserFollowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = UserFollow.objects.select_related(
-            'follower', 'following',
-            'follower__profile', 'following__profile'
-        )
+        queryset = UserFollow.objects.select_related('follower', 'following')
         
         filter_type = self.request.query_params.get('type', None)
         if filter_type == 'followers':
@@ -77,16 +75,22 @@ class UserFollowViewSet(viewsets.ModelViewSet):
         count = UserFollow.objects.filter(follower=request.user).count()
         return Response({'following_count': count})
 
+    @action(detail=False, methods=['GET'])
+    def get_feed(self, request):
+        """Get a feed of workouts from followed users."""
+        followed_users = UserFollow.objects.filter(follower=request.user).values_list('following', flat=True)
+        workouts = Workout.objects.filter(user__in=followed_users).order_by('-date_logged')
+        serializer = WorkoutSerializer(workouts, many=True)
+        return Response(serializer.data)
+
+
 class WorkoutLikeViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutLikeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return WorkoutLike.objects.select_related(
-            'user', 'workout', 'user__profile'
-        ).filter(
-            Q(user=self.request.user) |
-            Q(workout__user=self.request.user)
+        return WorkoutLike.objects.select_related('user', 'workout').filter(
+            Q(user=self.request.user) | Q(workout__user=self.request.user)
         )
 
     def create(self, request, *args, **kwargs):
@@ -106,21 +110,12 @@ class WorkoutLikeViewSet(viewsets.ModelViewSet):
 
             if not created:
                 like.delete()
-                return Response(
-                    {'status': 'unliked'},
-                    status=status.HTTP_200_OK
-                )
+                return Response({'status': 'unliked'}, status=status.HTTP_200_OK)
 
             serializer = self.get_serializer(like)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['GET'])
     def likes_count(self, request, pk=None):
@@ -128,15 +123,14 @@ class WorkoutLikeViewSet(viewsets.ModelViewSet):
         count = WorkoutLike.objects.filter(workout=workout).count()
         return Response({'likes_count': count})
 
+
 class WorkoutCommentViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutCommentSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         workout_id = self.request.query_params.get('workout_id')
-        queryset = WorkoutComment.objects.select_related(
-            'user', 'workout', 'user__profile'
-        ).order_by('-created_at')
+        queryset = WorkoutComment.objects.select_related('user', 'workout').order_by('-created_at')
         
         if workout_id:
             queryset = queryset.filter(workout_id=workout_id)
@@ -168,10 +162,7 @@ class WorkoutCommentViewSet(viewsets.ModelViewSet):
     def comments_count(self, request):
         workout_id = request.query_params.get('workout_id')
         if not workout_id:
-            return Response(
-                {'error': 'workout_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'workout_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         count = WorkoutComment.objects.filter(workout_id=workout_id).count()
         return Response({'comments_count': count})

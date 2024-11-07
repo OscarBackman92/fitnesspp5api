@@ -1,6 +1,6 @@
 import logging
 from dateutil.parser import parse, ParserError
-from django.db.models import Sum, Avg, Count, Q
+from django.db.models import Sum, Avg, Count
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from rest_framework import viewsets, permissions, filters, status
@@ -37,58 +37,60 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
 
-        try:
-            if start_date:
+        if start_date:
+            try:
                 parsed_start_date = parse(start_date)
                 queryset = queryset.filter(date_logged__gte=parsed_start_date)
-            if end_date:
+            except (ValueError, ParserError) as e:
+                logger.warning(f"Invalid start_date format: {start_date}. Error: {e}")
+                raise ValidationError("Invalid start_date format. It must be in YYYY-MM-DD format.")
+
+        if end_date:
+            try:
                 parsed_end_date = parse(end_date)
                 queryset = queryset.filter(date_logged__lte=parsed_end_date)
-        except (ValueError, ValidationError, ParserError) as e:
-            logger.warning(f"Invalid date format in query parameters: start_date={start_date}, end_date={end_date}. Error: {e}")
-            raise ValidationError("Invalid date format. It must be in YYYY-MM-DD format.")
+            except (ValueError, ParserError) as e:
+                logger.warning(f"Invalid end_date format: {end_date}. Error: {e}")
+                raise ValidationError("Invalid end_date format. It must be in YYYY-MM-DD format.")
 
         return queryset.select_related('user')
 
     def perform_create(self, serializer):
-        """Create a new workout instance"""
+        """Create a new workout instance and log the action."""
         workout = serializer.save(user=self.request.user)
-        logger.info(f"Workout created successfully for user {self.request.user.id}")
+        logger.info(f"Workout created successfully for user {self.request.user.id}: {workout}")
 
     def perform_update(self, serializer):
-        """Update a workout instance"""
+        """Update a workout instance and log the action."""
         workout = serializer.save()
-        logger.info(f"Workout {workout.id} updated successfully")
+        logger.info(f"Workout updated successfully: {workout}")
 
     def perform_destroy(self, instance):
-        """Delete a workout instance"""
+        """Delete a workout instance and log the action."""
         workout_id = instance.id
         instance.delete()
-        logger.info(f"Workout {workout_id} deleted successfully")
+        logger.info(f"Workout deleted successfully: {workout_id}")
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """
         Generate a summary of user's workout statistics.
-        Includes total workouts, durations, calories, and trends.
+        Includes total workouts, durations, calories, and recent workouts.
         """
         user_workouts = self.get_queryset()
         total_workouts = user_workouts.count()
         stats = user_workouts.aggregate(
-            total_duration=Sum('duration'),
-            total_calories=Sum('calories'),
-            avg_duration=Avg('duration')
+            total_duration=Sum('duration') or 0,
+            total_calories=Sum('calories') or 0,
+            avg_duration=Avg('duration') or 0
         )
 
         return Response({
             'total_workouts': total_workouts,
-            'total_duration': stats['total_duration'] or 0,
-            'total_calories': stats['total_calories'] or 0,
-            'avg_duration': round(stats['avg_duration'] or 0, 2),
-            'recent_workouts': WorkoutSerializer(
-                user_workouts.order_by('-date_logged')[:5],
-                many=True
-            ).data
+            'total_duration': stats['total_duration'],
+            'total_calories': stats['total_calories'],
+            'avg_duration': round(stats['avg_duration'], 2),
+            'recent_workouts': WorkoutSerializer(user_workouts.order_by('-date_logged')[:5], many=True).data
         })
 
     @action(detail=False, methods=['get'])
@@ -106,7 +108,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         })
 
     def _get_workout_type_distribution(self, queryset):
-        """Calculate distribution of workout types"""
+        """Calculate distribution of workout types."""
         return (
             queryset
             .values('workout_type')
@@ -120,7 +122,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _get_monthly_trends(self, queryset):
-        """Calculate monthly workout trends"""
+        """Calculate monthly workout trends."""
         return (
             queryset
             .annotate(month=TruncMonth('date_logged'))
@@ -135,7 +137,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _get_intensity_distribution(self, queryset):
-        """Calculate distribution of workout intensities"""
+        """Calculate distribution of workout intensities."""
         return (
             queryset
             .values('intensity')
@@ -150,10 +152,8 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _calculate_streaks(self, queryset):
-        """Calculate workout streaks"""
+        """Calculate workout streaks."""
         today = timezone.now().date()
-
-        # Get all workout dates ordered
         dates = list(
             queryset
             .filter(date_logged__lte=today)
@@ -165,23 +165,19 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         if not dates:
             return {'current_streak': 0, 'longest_streak': 0}
 
-        # Calculate streaks
-        current_streak = 1
-        longest_streak = 1
-        current_count = 1
+        current_streak = 0
+        longest_streak = 0
+        current_count = 0
 
-        for i in range(1, len(dates)):
-            if (dates[i] - dates[i - 1]).days == 1:
+        for i in range(len(dates) - 1):
+            if (dates[i + 1] - dates[i]).days == 1:
                 current_count += 1
-                longest_streak = max(longest_streak, current_count)
             else:
-                current_count = 1
+                longest_streak = max(longest_streak, current_count)
+                current_count = 0
 
-        # Check if current streak is active
-        if (today - dates[-1]).days <= 1:
-            current_streak = current_count
-        else:
-            current_streak = 0
+        current_streak = current_count + 1 if (today - dates[-1]).days <= 1 else 0
+        longest_streak = max(longest_streak, current_count)
 
         return {
             'current_streak': current_streak,

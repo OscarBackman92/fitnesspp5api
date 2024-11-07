@@ -6,7 +6,6 @@ from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Goal
 from django.urls import reverse
@@ -60,20 +59,21 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for viewing and editing user profiles
-    """
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    parser_classes = (MultiPartParser, FormParser, JSONParser)
-    filter_backends = [
-        filters.SearchFilter,
-        DjangoFilterBackend,
-        filters.OrderingFilter,
-    ]
-    search_fields = ['user__username', 'name']
-    filterset_fields = ['gender']
-    ordering_fields = ['created_at', 'name']
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+
+    def upload_image(self, request, *args, **kwargs):
+        """Handle profile image upload to Cloudinary"""
+        user_profile = self.get_object()
+        file = request.FILES.get('profile_image')
+        if file:
+            upload_result = cloudinary.uploader.upload(file)
+            user_profile.profile_image = upload_result['secure_url']  # Store the Cloudinary URL
+            user_profile.save()
+            return Response({'profile_image': user_profile.profile_image}, status=status.HTTP_200_OK)
+        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         """
