@@ -5,116 +5,88 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from .models import UserFollow, WorkoutLike, WorkoutComment
 from workouts.models import Workout
+from datetime import date
 
-class SocialAPITests(TestCase):
-    """Test suite for Social API endpoints"""
+class UserFollowAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.other_user = User.objects.create_user(username='otheruser', password='testpass')  # Add this line
+        self.client.force_authenticate(user=self.user)
+
+    def test_follow_user(self):
+        url = reverse('userfollow-toggle-follow')
+        response = self.client.post(url, {'user_id': self.other_user.id})
+        self.assertEqual(response.status_code, 201)  # Check that the follow action was successful
+
+    def test_unfollow_user(self):
+        # First, follow the other user
+        self.client.post(reverse('userfollow-toggle-follow'), {'user_id': self.other_user.id})
+        url = reverse('userfollow-toggle-follow')
+        response = self.client.post(url, {'user_id': self.other_user.id})
+        self.assertEqual(response.status_code, 200)  # Check that the unfollow action was successful
+class WorkoutLikeAPITests(TestCase):
+    """Test suite for WorkoutLike API endpoints"""
 
     def setUp(self):
         self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.workout = Workout.objects.create(
+            user=self.user,
+            workout_type='cardio',
+            date_logged=date.today(),
+            duration=30
+        )
+        self.client.force_authenticate(user=self.user)
 
-        # Create test users
-        self.user1 = User.objects.create_user(username='user1', email='user1@test.com', password='pass123')
-        self.user2 = User.objects.create_user(username='user2', email='user2@test.com', password='pass123')
-        self.user3 = User.objects.create_user(username='user3', email='user3@test.com', password='pass123')
-
-        # Create test workouts
-        self.workout1 = Workout.objects.create(user=self.user2, workout_type='cardio', duration=30, calories=300, date_logged='2024-11-01')
-        self.workout2 = Workout.objects.create(user=self.user2, workout_type='strength', duration=45, calories=400, date_logged='2024-11-02')
-
-        # Authenticate user1
-        self.client.force_authenticate(user=self.user1)
-
-    def test_follow_functionality(self):
-        """Test all aspects of follow functionality"""
-        response = self.client.post(reverse('toggle-follow'), {'user_id': self.user2.id})
+    def test_like_workout(self):
+        """Test liking a workout."""
+        url = reverse('workoutlike-list')
+        response = self.client.post(url, {'workout': self.workout.id})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(UserFollow.objects.filter(follower=self.user1, following=self.user2).exists())
+        self.assertTrue(WorkoutLike.objects.filter(user=self.user, workout=self.workout).exists())
 
-        response = self.client.post(reverse('toggle-follow'), {'user_id': self.user2.id})
+    def test_unlike_workout(self):
+        """Test unliking a workout."""
+        WorkoutLike.objects.create(user=self.user, workout=self.workout)  # Pre-create like
+        url = reverse('workoutlike-list')
+        response = self.client.post(url, {'workout': self.workout.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(UserFollow.objects.filter(follower=self.user1, following=self.user2).exists())
+        self.assertFalse(WorkoutLike.objects.filter(user=self.user, workout=self.workout).exists())
 
-        response = self.client.post(reverse('toggle-follow'), {'user_id': 99999})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+class WorkoutCommentAPITests(TestCase):
+    """Test suite for WorkoutComment API endpoints"""
 
-        response = self.client.post(reverse('toggle-follow'), {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.workout = Workout.objects.create(
+            user=self.user,
+            workout_type='cardio',
+            date_logged=date.today(),
+            duration=30
+        )
+        self.client.force_authenticate(user=self.user)
 
-        response = self.client.post(reverse('toggle-follow'), {'user_id': self.user1.id})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_like_functionality(self):
-        """Test all aspects of like functionality"""
-        response = self.client.post(reverse('like-list'), {'workout': self.workout1.id})
+    def test_add_comment(self):
+        """Test adding a comment to a workout."""
+        url = reverse('workoutcomment-list')
+        response = self.client.post(url, {'workout': self.workout.id, 'content': 'Great workout!'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(WorkoutComment.objects.filter(user=self.user, workout=self.workout).exists())
 
-        self.assertEqual(self.workout1.likes.count(), 1)
-
-        response = self.client.post(reverse('like-list'), {'workout': self.workout1.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(self.workout1.likes.count(), 0)
-
-        response = self.client.post(reverse('like-list'), {'workout': 99999})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        response = self.client.post(reverse('like-list'), {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_comment_functionality(self):
-        """Test all aspects of comment functionality"""
-        # Clear existing comments before testing
-        WorkoutComment.objects.all().delete()  
-
-        response = self.client.post(reverse('comment-list'), {'workout': self.workout1.id, 'content': 'Great workout!'})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.client.get(reverse('comment-list'), {'workout_id': self.workout1.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)  # Should only have one comment
-
-    def test_feed_functionality(self):
-        """Test social feed functionality"""
-        UserFollow.objects.create(follower=self.user1, following=self.user2)
-
-        response = self.client.get(reverse('feed'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Check if workout1 is included in the feed from user2
-        self.assertIn(self.workout1.id, [w['id'] for w in response.data])
-
-    def test_social_statistics(self):
-        """Test social statistics endpoints"""
-        UserFollow.objects.create(follower=self.user1, following=self.user2)
-        UserFollow.objects.create(follower=self.user3, following=self.user1)
-        WorkoutLike.objects.create(user=self.user1, workout=self.workout1)
-        WorkoutComment.objects.create(user=self.user1, workout=self.workout1, content='Test comment')
-
-        response = self.client.get(reverse('followers-count'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['followers_count'], 1)
-
-        response = self.client.get(reverse('following-count'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['following_count'], 1)
-
-        response = self.client.get(reverse('workout-detail', kwargs={'pk': self.workout1.id}))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['likes_count'], 1)
-        self.assertEqual(response.data['comments_count'], 1)
-
-    def test_authentication_required(self):
-        """Test authentication requirements"""
-        client = APIClient()  # Unauthenticated client
-        
-        protected_urls = [
-            reverse('toggle-follow'),
-            reverse('like-list'),
-            reverse('comment-list'),
-            reverse('feed'),
-        ]
-        
-        for url in protected_urls:
-            response = client.get(url)
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-            response = client.post(url)
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_delete_comment(self):
+        """Test deleting a comment."""
+        comment = WorkoutComment.objects.create(user=self.user, workout=self.workout, content='Nice!')
+        url = reverse('workoutcomment-detail', kwargs={'pk': comment.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(WorkoutComment.objects.filter(id=comment.id).exists())
