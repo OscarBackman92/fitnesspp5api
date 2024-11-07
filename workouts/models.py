@@ -42,10 +42,6 @@ class Workout(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(1440)],  # max 24 hours
         help_text="Duration in minutes"
     )
-    calories = models.IntegerField(
-        validators=[MinValueValidator(0)],
-        help_text="Calories burned"
-    )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -59,11 +55,6 @@ class Workout(models.Model):
         folder='workout_images',
         blank=True,
         null=True,
-        transformation={
-            'quality': 'auto:eco',
-            'crop': 'fill',
-            'aspect_ratio': '16:9'
-        }
     )
 
     class Meta:

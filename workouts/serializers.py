@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Workout
+from api.models import UserProfile  # Correct import for UserProfile
 
 class WorkoutSerializer(serializers.ModelSerializer):
     workout_type_display = serializers.CharField(source='get_workout_type_display', read_only=True)
@@ -12,7 +13,7 @@ class WorkoutSerializer(serializers.ModelSerializer):
         model = Workout
         fields = [
             'id', 'user', 'user_username', 'workout_type', 'workout_type_display',
-            'date_logged', 'duration', 'calories', 'notes', 'created_at', 'updated_at',
+            'date_logged', 'duration', 'notes', 'created_at', 'updated_at',
             'intensity', 'likes_count', 'comments_count', 'is_liked'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
@@ -26,9 +27,4 @@ class WorkoutSerializer(serializers.ModelSerializer):
     def validate_duration(self, value):
         if value < 0:
             raise serializers.ValidationError("Duration cannot be negative.")
-        return value
-
-    def validate_calories(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Calories cannot be negative.")
         return value

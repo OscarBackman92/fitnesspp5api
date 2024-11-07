@@ -24,16 +24,14 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['workout_type', 'date_logged', 'intensity']
     search_fields = ['workout_type', 'notes']
-    ordering_fields = ['date_logged', 'duration', 'calories']
+    ordering_fields = ['date_logged', 'duration']
     ordering = ['-date_logged']  # Default ordering
 
     def get_queryset(self):
-        """
-        Get base queryset filtered by user and optionally by date range.
-        Allows filtering by start_date and end_date query parameters.
-        """
+        """Get base queryset filtered by user and optionally by date range."""
         queryset = Workout.objects.filter(user=self.request.user)
 
+        # Date filtering
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
 
@@ -41,16 +39,16 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             try:
                 parsed_start_date = parse(start_date)
                 queryset = queryset.filter(date_logged__gte=parsed_start_date)
-            except (ValueError, ParserError) as e:
-                logger.warning(f"Invalid start_date format: {start_date}. Error: {e}")
+            except (ValueError, ParserError):
+                logger.warning(f"Invalid start_date format: {start_date}")
                 raise ValidationError("Invalid start_date format. It must be in YYYY-MM-DD format.")
 
         if end_date:
             try:
                 parsed_end_date = parse(end_date)
                 queryset = queryset.filter(date_logged__lte=parsed_end_date)
-            except (ValueError, ParserError) as e:
-                logger.warning(f"Invalid end_date format: {end_date}. Error: {e}")
+            except (ValueError, ParserError):
+                logger.warning(f"Invalid end_date format: {end_date}")
                 raise ValidationError("Invalid end_date format. It must be in YYYY-MM-DD format.")
 
         return queryset.select_related('user')
@@ -73,33 +71,31 @@ class WorkoutViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """
-        Generate a summary of user's workout statistics.
-        Includes total workouts, durations, calories, and recent workouts.
-        """
+        """Generate a summary of user's workout statistics."""
         user_workouts = self.get_queryset()
         total_workouts = user_workouts.count()
         stats = user_workouts.aggregate(
             total_duration=Sum('duration') or 0,
-            total_calories=Sum('calories') or 0,
             avg_duration=Avg('duration') or 0
         )
+
+        # Handle None values for avg_duration
+        avg_duration = stats['avg_duration']
+        if avg_duration is None:
+            avg_duration = 0  # Set to 0 or another default value if there are no workouts
 
         return Response({
             'total_workouts': total_workouts,
             'total_duration': stats['total_duration'],
-            'total_calories': stats['total_calories'],
-            'avg_duration': round(stats['avg_duration'], 2),
+            'avg_duration': round(avg_duration, 2),
             'recent_workouts': WorkoutSerializer(user_workouts.order_by('-date_logged')[:5], many=True).data
         })
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """
-        Provide detailed workout statistics including trends and patterns.
-        """
+        """Provide detailed workout statistics including trends and patterns."""
         queryset = self.get_queryset()
-        
+
         return Response({
             'workout_types': self._get_workout_type_distribution(queryset),
             'monthly_trends': self._get_monthly_trends(queryset),
@@ -115,7 +111,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             .annotate(
                 count=Count('id'),
                 total_duration=Sum('duration'),
-                total_calories=Sum('calories'),
                 avg_duration=Avg('duration')
             )
             .order_by('-count')
@@ -130,7 +125,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             .annotate(
                 workout_count=Count('id'),
                 total_duration=Sum('duration'),
-                total_calories=Sum('calories'),
                 avg_duration=Avg('duration')
             )
             .order_by('month')
@@ -144,9 +138,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             .annotate(
                 count=Count('id'),
                 avg_duration=Avg('duration'),
-                avg_calories=Avg('calories'),
-                total_duration=Sum('duration'),
-                total_calories=Sum('calories')
+                total_duration=Sum('duration')
             )
             .order_by('intensity')
         )

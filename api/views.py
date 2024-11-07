@@ -10,16 +10,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Goal
 from django.urls import reverse
 from .serializers import (
-    UserProfileSerializer, 
-    GoalSerializer, 
+    UserProfileSerializer,
+    GoalSerializer,
     UserRegistrationSerializer,
     UserInfoSerializer
 )
 from .permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import api_view, permission_classes
 
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])  # Allow any user to access this view
 def api_root(request, format=None):
     """API root view showing available endpoints."""
     return Response({
@@ -159,25 +161,31 @@ class GoalViewSet(viewsets.ModelViewSet):
         return Response(summary)
 
 @api_view(['GET'])
-def api_root(request):
-    """API root view providing links to all main endpoints."""
+@permission_classes([AllowAny])  # Allow any user to access this view
+def api_root(request, format=None):
+    """API root view showing available endpoints."""
     return Response({
-        'profiles': f"{request.build_absolute_uri('/api/profiles/')}",
-        'goals': f"{request.build_absolute_uri('/api/goals/')}",
+        'profiles': request.build_absolute_uri(reverse('profile-list')),
+        'goals': request.build_absolute_uri(reverse('goal-list')),
         'auth': {
-            'login': f"{request.build_absolute_uri('/api/auth/login/')}",
-            'logout': f"{request.build_absolute_uri('/api/auth/logout/')}",
-            'register': f"{request.build_absolute_uri('/api/auth/registration/')}",
+            'login': request.build_absolute_uri(reverse('rest_login')),
+            'logout': request.build_absolute_uri(reverse('rest_logout')),
+            'register': request.build_absolute_uri(reverse('rest_register')),
+            'user_details': request.build_absolute_uri(reverse('rest_user_details')),
         },
-        'workouts': f"{request.build_absolute_uri('/api/workouts/')}",
+        'workouts': {
+            'list': request.build_absolute_uri(reverse('workouts:workout-list')),  # Adjusted to include namespace
+            'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
+            'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
+        },
         'social': {
-            'feed': f"{request.build_absolute_uri('/api/feed/')}",
-            'follows': f"{request.build_absolute_uri('/api/follows/')}",
-            'likes': f"{request.build_absolute_uri('/api/likes/')}",
-            'comments': f"{request.build_absolute_uri('/api/comments/')}",
+            'comments': request.build_absolute_uri(reverse('comment-list')),
+            'likes': request.build_absolute_uri(reverse('like-list')),
+            'follows': request.build_absolute_uri(reverse('follow-list')),
+            'toggle_follow': request.build_absolute_uri(reverse('toggle-follow')),
         },
         'documentation': {
-            'swagger': f"{request.build_absolute_uri('/swagger/')}",
-            'redoc': f"{request.build_absolute_uri('/redoc/')}",
-        }
+            'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),
+            'redoc': request.build_absolute_uri(reverse('schema-redoc')),
+        },
     })
