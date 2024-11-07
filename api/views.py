@@ -4,11 +4,9 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Goal
-from django.urls import reverse
 from .serializers import (
     UserProfileSerializer,
     GoalSerializer,
@@ -16,22 +14,43 @@ from .serializers import (
     UserInfoSerializer
 )
 from .permissions import IsOwnerOrReadOnly
-from rest_framework.decorators import api_view, permission_classes
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])  # Allow any user to access this view
-def api_root(request, format=None):
+@permission_classes([permissions.AllowAny])  # Allow any user to access this view
+def api_root(request):
     """API root view showing available endpoints."""
     return Response({
-        'profiles': reverse('profile-list', request=request, format=format),
-        'goals': reverse('goal-list', request=request, format=format),
+        'profiles': request.build_absolute_uri(reverse('profile-list')),
+        'goals': request.build_absolute_uri(reverse('goal-list')),
+        'auth': {
+            'login': request.build_absolute_uri(reverse('rest_login')),
+            'logout': request.build_absolute_uri(reverse('rest_logout')),
+            'register': request.build_absolute_uri(reverse('rest_register')),
+            'user_details': request.build_absolute_uri(reverse('rest_user_details')),
+        },
+        'workouts': {
+            'list': request.build_absolute_uri(reverse('workouts:workout-list')),
+            'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
+            'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
+        },
+        'social': {
+            'comments': request.build_absolute_uri(reverse('comment-list')),
+            'likes': request.build_absolute_uri(reverse('like-list')),
+            'follows': request.build_absolute_uri(reverse('follow-list')),
+            'toggle_follow': request.build_absolute_uri(reverse('toggle-follow')),
+        },
+        'documentation': {
+            'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),
+            'redoc': request.build_absolute_uri(reverse('schema-redoc')),
+        },
     })
 
 class UserRegistrationView(generics.CreateAPIView):
     """View for user registration."""
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
     serializer_class = UserRegistrationSerializer
 
     def create(self, request, *args, **kwargs):
@@ -50,24 +69,15 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
+    """ViewSet for User Profiles."""
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """Get queryset with optimized database queries and ordering."""
-        queryset = UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
+        return UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
             workouts_count=Count('user__workouts', distinct=True)
         ).order_by('-created_at')  # Order by created_at descending
-
-        # Search functionality
-        search_query = self.request.query_params.get('search', '')
-        if search_query:
-            queryset = queryset.filter(
-                Q(user__username__icontains=search_query) |
-                Q(name__icontains=search_query)
-            )
-
-        return queryset
 
     def perform_create(self, serializer):
         """Create a new profile."""
@@ -76,7 +86,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['GET'])
     def stats(self, request, pk=None):
         """Get user profile statistics for a specific profile."""
-        profile = get_object_or_404(UserProfile, pk=pk)
+        profile = get_object_or_404(UserProfile.objects.annotate(
+            workouts_count=Count('user__workouts', distinct=True)
+        ), pk=pk)
+        
         stats = {
             'total_workouts': profile.user.workouts.count(),
             'workouts_count': profile.workouts_count,  # Using the annotated count
@@ -91,11 +104,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         if 'profile_image' not in request.FILES:
             return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(
-            profile,
-            data={'profile_image': request.FILES['profile_image']},
-            partial=True
-        )
+        serializer = self.get_serializer(profile, data={'profile_image': request.FILES['profile_image']}, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -159,33 +168,3 @@ class GoalViewSet(viewsets.ModelViewSet):
             'upcoming_deadlines': goals.filter(completed=False, deadline__gte=timezone.now()).order_by('deadline')[:5].values('description', 'deadline')
         }
         return Response(summary)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])  # Allow any user to access this view
-def api_root(request, format=None):
-    """API root view showing available endpoints."""
-    return Response({
-        'profiles': request.build_absolute_uri(reverse('profile-list')),
-        'goals': request.build_absolute_uri(reverse('goal-list')),
-        'auth': {
-            'login': request.build_absolute_uri(reverse('rest_login')),
-            'logout': request.build_absolute_uri(reverse('rest_logout')),
-            'register': request.build_absolute_uri(reverse('rest_register')),
-            'user_details': request.build_absolute_uri(reverse('rest_user_details')),
-        },
-        'workouts': {
-            'list': request.build_absolute_uri(reverse('workouts:workout-list')),  # Adjusted to include namespace
-            'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
-            'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
-        },
-        'social': {
-            'comments': request.build_absolute_uri(reverse('comment-list')),
-            'likes': request.build_absolute_uri(reverse('like-list')),
-            'follows': request.build_absolute_uri(reverse('follow-list')),
-            'toggle_follow': request.build_absolute_uri(reverse('toggle-follow')),
-        },
-        'documentation': {
-            'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),
-            'redoc': request.build_absolute_uri(reverse('schema-redoc')),
-        },
-    })

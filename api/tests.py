@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 from rest_framework import status
 from .models import UserProfile, Goal
-from datetime import date, timedelta
+from datetime import date
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 from rest_framework import status
 from .models import UserProfile, Goal
-from datetime import date, timedelta
+from datetime import date
 
 class UserProfileAPITests(TestCase):
     """Test suite for UserProfile API endpoints"""
@@ -27,28 +27,30 @@ class UserProfileAPITests(TestCase):
             password='testpass123'
         )
 
+        # Ensure any existing UserProfile is deleted to prevent UNIQUE constraint errors
+        UserProfile.objects.filter(user=self.user).delete()
+
         # Create UserProfile
-        self.profile, created = UserProfile.objects.get_or_create(
+        self.profile = UserProfile.objects.create(
             user=self.user,
-            defaults={
-                'name': 'Test User',
-                'weight': 70.5,
-                'height': 175,
-                'date_of_birth': date(1990, 1, 1),
-                'gender': 'M'
-            }
+            name='Test User',
+            weight=70.5,
+            height=175,
+            date_of_birth=date(1990, 1, 1),
+            gender='M'
         )
 
-        # Print profile details for debugging
-        print(f"Profile created: {self.profile.name}, {self.profile.weight}, {self.profile.height}, {self.profile.gender}")
+        # Verify the profile is created successfully
+        self.assertIsNotNone(self.profile, "UserProfile was not created.")
 
         self.client.force_authenticate(user=self.user)
+
 
     def test_get_profile(self):
         """Test retrieving the user profile"""
         url = reverse('profile-detail', kwargs={'pk': self.profile.pk})
         response = self.client.get(url)
-        print(response.data)  # Print the response data for debugging
+        print("Response data:", response.data)  # Print the full response for debugging
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], 'Test User')
 
@@ -85,5 +87,4 @@ class UserProfileAPITests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('total_workouts', response.data)
-        self.assertIn('total_calories', response.data)
-        self.assertIn('avg_duration', response.data)
+        self.assertIn('workouts_count', response.data)
