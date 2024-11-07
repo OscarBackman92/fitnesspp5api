@@ -18,8 +18,17 @@ class WorkoutSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
     def get_is_liked(self, obj):
-        """Check if the current user has liked this workout."""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
         return obj.likes.filter(user=request.user).exists()
+
+    def validate_duration(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Duration cannot be negative.")
+        return value
+
+    def validate_calories(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Calories cannot be negative.")
+        return value

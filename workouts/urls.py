@@ -7,7 +7,8 @@ app_name = 'workouts'
 router = DefaultRouter()
 router.register(r'', views.WorkoutViewSet, basename='workout')
 
-# Add any additional routes on top of the router URLs
 urlpatterns = [
     path('', include(router.urls)),
+    path('summary/', views.WorkoutViewSet.as_view({'get': 'summary'}), name='workout-summary'),
+    path('statistics/', views.WorkoutViewSet.as_view({'get': 'statistics'}), name='workout-statistics'),
 ]

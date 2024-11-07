@@ -1,6 +1,5 @@
-# views.py
-
 import logging
+from dateutil.parser import parse, ParserError
 from django.db.models import Sum, Avg, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
@@ -11,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Workout
 from .serializers import WorkoutSerializer
 from api.permissions import IsOwnerOrReadOnly
-from datetime import timedelta
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -34,78 +33,38 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         Allows filtering by start_date and end_date query parameters.
         """
         queryset = Workout.objects.filter(user=self.request.user)
-        
+
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
-        
+
         try:
             if start_date:
-                queryset = queryset.filter(date_logged__gte=start_date)
+                parsed_start_date = parse(start_date)
+                queryset = queryset.filter(date_logged__gte=parsed_start_date)
             if end_date:
-                queryset = queryset.filter(date_logged__lte=end_date)
-        except ValueError as e:
-            logger.warning(f"Invalid date format in query parameters: {str(e)}")
+                parsed_end_date = parse(end_date)
+                queryset = queryset.filter(date_logged__lte=parsed_end_date)
+        except (ValueError, ValidationError, ParserError) as e:
+            logger.warning(f"Invalid date format in query parameters: start_date={start_date}, end_date={end_date}. Error: {e}")
+            raise ValidationError("Invalid date format. It must be in YYYY-MM-DD format.")
 
         return queryset.select_related('user')
 
     def perform_create(self, serializer):
         """Create a new workout instance"""
-        try:
-            workout = serializer.save(user=self.request.user)
-            logger.info(f"Workout created successfully for user {self.request.user.id}")
-            return workout
-        except Exception as e:
-            logger.error(f"Error creating workout for user {self.request.user.id}: {str(e)}")
-            raise
+        workout = serializer.save(user=self.request.user)
+        logger.info(f"Workout created successfully for user {self.request.user.id}")
 
     def perform_update(self, serializer):
         """Update a workout instance"""
-        try:
-            workout = serializer.save()
-            logger.info(f"Workout {workout.id} updated successfully")
-            return workout
-        except Exception as e:
-            logger.error(f"Error updating workout {serializer.instance.id}: {str(e)}")
-            raise
+        workout = serializer.save()
+        logger.info(f"Workout {workout.id} updated successfully")
 
     def perform_destroy(self, instance):
         """Delete a workout instance"""
-        try:
-            workout_id = instance.id
-            instance.delete()
-            logger.info(f"Workout {workout_id} deleted successfully")
-        except Exception as e:
-            logger.error(f"Error deleting workout {instance.id}: {str(e)}")
-            raise
-
-    def update(self, request, *args, **kwargs):
-        """Handle workout updates with validation"""
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance,
-            data=request.data,
-            partial=kwargs.get('partial', False)
-        )
-        
-        if serializer.is_valid():
-            try:
-                self.perform_update(serializer)
-                logger.info(f"Workout updated successfully for user {request.user.id}")
-                return Response(serializer.data)
-            except Exception as e:
-                logger.error(f"Error during workout update: {str(e)}")
-                return Response({
-                    'status': 'Error',
-                    'message': 'An error occurred while updating the workout.',
-                    'error': str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        logger.error(f"Validation error for user {request.user.id}: {serializer.errors}")
-        return Response({
-            'status': 'Bad request',
-            'message': 'Workout could not be updated with received data.',
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        workout_id = instance.id
+        instance.delete()
+        logger.info(f"Workout {workout_id} deleted successfully")
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
@@ -113,73 +72,38 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         Generate a summary of user's workout statistics.
         Includes total workouts, durations, calories, and trends.
         """
-        try:
-            user_workouts = self.get_queryset()
-            today = timezone.now().date()
-            last_week = today - timezone.timedelta(days=7)
-            last_month = today - timezone.timedelta(days=30)
-            
-            # Calculate basic statistics
-            total_workouts = user_workouts.count()
-            stats = user_workouts.aggregate(
-                total_duration=Sum('duration'),
-                total_calories=Sum('calories'),
-                avg_duration=Avg('duration')
-            )
+        user_workouts = self.get_queryset()
+        total_workouts = user_workouts.count()
+        stats = user_workouts.aggregate(
+            total_duration=Sum('duration'),
+            total_calories=Sum('calories'),
+            avg_duration=Avg('duration')
+        )
 
-            # Get most frequent workout type
-            most_frequent = (
-                user_workouts
-                .values('workout_type')
-                .annotate(count=Count('id'))
-                .order_by('-count')
-                .first()
-            )
-
-            return Response({
-                'total_workouts': total_workouts,
-                'total_duration': stats['total_duration'] or 0,
-                'total_calories': stats['total_calories'] or 0,
-                'avg_duration': round(stats['avg_duration'] or 0, 2),
-                'most_frequent_workout': most_frequent['workout_type'] if most_frequent else None,
-                'recent_workouts': WorkoutSerializer(
-                    user_workouts.order_by('-date_logged')[:5], 
-                    many=True
-                ).data,
-                'workouts_this_week': user_workouts.filter(
-                    date_logged__gte=last_week
-                ).count(),
-                'workouts_this_month': user_workouts.filter(
-                    date_logged__gte=last_month
-                ).count()
-            })
-        except Exception as e:
-            logger.error(f"Error generating workout summary for user {request.user.id}: {str(e)}")
-            return Response({
-                'status': 'Error',
-                'message': 'An error occurred while generating the workout summary.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'total_workouts': total_workouts,
+            'total_duration': stats['total_duration'] or 0,
+            'total_calories': stats['total_calories'] or 0,
+            'avg_duration': round(stats['avg_duration'] or 0, 2),
+            'recent_workouts': WorkoutSerializer(
+                user_workouts.order_by('-date_logged')[:5],
+                many=True
+            ).data
+        })
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """
         Provide detailed workout statistics including trends and patterns.
         """
-        try:
-            queryset = self.get_queryset()
-            
-            return Response({
-                'workout_types': self._get_workout_type_distribution(queryset),
-                'monthly_trends': self._get_monthly_trends(queryset),
-                'intensity_distribution': self._get_intensity_distribution(queryset),
-                'streaks': self._calculate_streaks(queryset),
-            })
-        except Exception as e:
-            logger.error(f"Error generating statistics for user {request.user.id}: {str(e)}")
-            return Response({
-                'status': 'Error',
-                'message': 'An error occurred while generating statistics.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        queryset = self.get_queryset()
+        
+        return Response({
+            'workout_types': self._get_workout_type_distribution(queryset),
+            'monthly_trends': self._get_monthly_trends(queryset),
+            'intensity_distribution': self._get_intensity_distribution(queryset),
+            'streaks': self._calculate_streaks(queryset),
+        })
 
     def _get_workout_type_distribution(self, queryset):
         """Calculate distribution of workout types"""
@@ -228,7 +152,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     def _calculate_streaks(self, queryset):
         """Calculate workout streaks"""
         today = timezone.now().date()
-        
+
         # Get all workout dates ordered
         dates = list(
             queryset
@@ -247,7 +171,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         current_count = 1
 
         for i in range(1, len(dates)):
-            if (dates[i] - dates[i-1]).days == 1:
+            if (dates[i] - dates[i - 1]).days == 1:
                 current_count += 1
                 longest_streak = max(longest_streak, current_count)
             else:
