@@ -28,16 +28,6 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s profile"
 
-    def get_age(self):
-        """Calculate age from date_of_birth."""
-        if self.date_of_birth:
-            today = timezone.now().date()
-            return today.year - self.date_of_birth.year - (
-                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
-            )
-        return None
-
-
 class Goal(models.Model):
     GOAL_TYPES = [
         ('weight', 'Weight Goal'),

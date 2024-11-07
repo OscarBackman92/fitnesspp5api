@@ -24,35 +24,26 @@ schema_view = get_schema_view(
 urlpatterns = [
     # Redirect root to API root
     path('', RedirectView.as_view(url='/api/', permanent=False)),
-    
+
     # Admin site
     path('admin/', admin.site.urls),
-    
+
     # API endpoints
     path('api/', include([
-        # API root and basic endpoints
-        path('', include('api.urls')),
-        
-        # Workouts endpoints
-        path('workouts/', include('workouts.urls', namespace='workouts')),
-        
-        # Social endpoints
-        path('', include('social.urls')),
-        
+        path('', include('api.urls')),  # API root and main endpoints
+        path('workouts/', include('workouts.urls', namespace='workouts')),  # Workouts endpoints
+        path('', include('social.urls')),  # Social endpoints
         # Authentication endpoints
         path('auth/', include([
             path('', include('dj_rest_auth.urls')),
             path('registration/', include('dj_rest_auth.registration.urls')),
         ])),
     ])),
-    
+
     # API Documentation
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), 
-         name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), 
-         name='schema-redoc'),
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), 
-         name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]
 
 # Debug toolbar (only in development)
@@ -61,6 +52,6 @@ if settings.DEBUG:
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
-    
+
     # Serve media files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

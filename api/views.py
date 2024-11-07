@@ -1,5 +1,5 @@
 import logging
-from django.db.models import Sum, Avg, Count, Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters, status, generics
@@ -21,18 +21,14 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def api_root(request, format=None):
-    """
-    API root view showing available endpoints
-    """
+    """API root view showing available endpoints."""
     return Response({
         'profiles': reverse('profile-list', request=request, format=format),
         'goals': reverse('goal-list', request=request, format=format),
     })
 
 class UserRegistrationView(generics.CreateAPIView):
-    """
-    View for user registration
-    """
+    """View for user registration."""
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
 
@@ -41,53 +37,27 @@ class UserRegistrationView(generics.CreateAPIView):
         if serializer.is_valid():
             try:
                 user = serializer.save()
-                # Automatically create UserProfile for the new user
-                UserProfile.objects.create(user=user)
+                UserProfile.objects.create(user=user)  # Automatically create UserProfile for the new user
                 return Response({
-                    "user": UserRegistrationSerializer(
-                        user, 
-                        context=self.get_serializer_context()
-                    ).data,
+                    "user": UserRegistrationSerializer(user, context=self.get_serializer_context()).data,
                     "message": "User Created Successfully"
                 }, status=status.HTTP_201_CREATED)
             except Exception as e:
                 logger.error(f"Error creating user: {str(e)}")
-                return Response({
-                    "error": "Could not create user",
-                    "details": str(e)
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Could not create user", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return UserProfile.objects.filter(user=self.request.user)
+        """Get queryset with optimized database queries and ordering."""
+        queryset = UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
+            workouts_count=Count('user__workouts', distinct=True)
+        ).order_by('-created_at')  # Order by created_at descending
 
-    def upload_image(self, request, *args, **kwargs):
-        """Handle profile image upload to Cloudinary"""
-        user_profile = self.get_object()
-        file = request.FILES.get('profile_image')
-        if file:
-            upload_result = cloudinary.uploader.upload(file)
-            user_profile.profile_image = upload_result['secure_url']  # Store the Cloudinary URL
-            user_profile.save()
-            return Response({'profile_image': user_profile.profile_image}, status=status.HTTP_200_OK)
-        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-    def get_queryset(self):
-        """
-        Get queryset with optimized database queries
-        """
-        queryset = UserProfile.objects.select_related('user').prefetch_related(
-            'user__workouts',
-            'user__goals'
-        ).annotate(
-            workouts_count=Count('user__workouts', distinct=True),
-            avg_workout_duration=Avg('user__workouts__duration'),
-            total_calories=Sum('user__workouts__calories')
-        )
-
+        # Search functionality
         search_query = self.request.query_params.get('search', '')
         if search_query:
             queryset = queryset.filter(
@@ -98,36 +68,26 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        """Create a new profile"""
+        """Create a new profile."""
         serializer.save(user=self.request.user)
 
     @action(detail=True, methods=['GET'])
     def stats(self, request, pk=None):
-        """
-        Get user profile statistics for a specific profile
-        """
+        """Get user profile statistics for a specific profile."""
         profile = get_object_or_404(UserProfile, pk=pk)
         stats = {
             'total_workouts': profile.user.workouts.count(),
-            'total_calories': profile.user.workouts.aggregate(
-                total=Sum('calories')
-            )['total'] or 0,
-            'avg_duration': profile.user.workouts.aggregate(
-                avg=Avg('duration')
-            )['avg'] or 0,
+            'workouts_count': profile.workouts_count,  # Using the annotated count
         }
         return Response(stats)
 
     @action(detail=True, methods=['POST'])
     def upload_image(self, request, pk=None):
-        """Upload profile image endpoint"""
+        """Upload profile image endpoint."""
         profile = self.get_object()
         
         if 'profile_image' not in request.FILES:
-            return Response(
-                {'error': 'No image provided'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(
             profile,
@@ -137,47 +97,19 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_update(self, serializer):
-        """Handle profile update including image upload"""
-        instance = serializer.instance
-        if 'profile_image' in self.request.FILES:
-            old_image = None
-            if instance.profile_image:
-                old_image = instance.profile_image
-
-            instance = serializer.save()
-
-            if old_image and 'default_profile_image' not in str(old_image):
-                try:
-                    old_image.delete()
-                except Exception as e:
-                    logger.error(f"Error deleting old profile image: {e}")
-        else:
-            serializer.save()
-
-    @action(detail=True, methods=['GET'])
+    @action(detail=False, methods=['GET'])
     def full_info(self, request, pk=None):
-        """
-        Get full profile information including related data
-        """
+        """Get full profile information including related data."""
         profile = self.get_object()
         serializer = UserInfoSerializer(profile, context={'request': request})
         return Response(serializer.data)
 
 class GoalViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for viewing and editing goals
-    """
+    """ViewSet for viewing and editing goals."""
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -186,7 +118,7 @@ class GoalViewSet(viewsets.ModelViewSet):
     ordering_fields = ['deadline', 'created_at']
 
     def get_queryset(self):
-        queryset = Goal.objects.filter(user=self.request.user)
+        queryset = Goal.objects.filter(user_profile__user=self.request.user)
         
         status = self.request.query_params.get('status', None)
         if status:
@@ -203,13 +135,11 @@ class GoalViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(user_profile=self.request.user.profile)  # Adjust based on your UserProfile
 
     @action(detail=True, methods=['POST'])
     def toggle_completion(self, request, pk=None):
-        """
-        Toggle goal completion status
-        """
+        """Toggle goal completion status."""
         goal = self.get_object()
         goal.completed = not goal.completed
         goal.save()
@@ -218,26 +148,19 @@ class GoalViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def summary(self, request):
-        """
-        Get summary of user's goals
-        """
+        """Get summary of user's goals."""
         goals = self.get_queryset()
         summary = {
             'total_goals': goals.count(),
             'completed_goals': goals.filter(completed=True).count(),
             'active_goals': goals.filter(completed=False).count(),
-            'upcoming_deadlines': goals.filter(
-                completed=False,
-                deadline__gte=timezone.now()
-            ).order_by('deadline')[:5].values('description', 'deadline')
+            'upcoming_deadlines': goals.filter(completed=False, deadline__gte=timezone.now()).order_by('deadline')[:5].values('description', 'deadline')
         }
         return Response(summary)
 
 @api_view(['GET'])
 def api_root(request):
-    """
-    API root view providing links to all main endpoints
-    """
+    """API root view providing links to all main endpoints."""
     return Response({
         'profiles': f"{request.build_absolute_uri('/api/profiles/')}",
         'goals': f"{request.build_absolute_uri('/api/goals/')}",

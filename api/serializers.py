@@ -9,28 +9,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
     profile_image = serializers.SerializerMethodField()
-    bmi = serializers.SerializerMethodField()
     age = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
     workouts_count = serializers.IntegerField(read_only=True)
-    avg_workout_duration = serializers.FloatField(read_only=True)
-    total_calories = serializers.IntegerField(read_only=True)
-    goals = serializers.SerializerMethodField()
+    goals = serializers.SerializerMethodField()  # This will fetch goals correctly
 
     class Meta:
         model = UserProfile
         fields = [
             'id', 'username', 'email', 'name', 'weight', 'height',
-            'bmi', 'age', 'fitness_goals', 'profile_image',
-            'date_of_birth', 'created_at', 'updated_at', 'gender',
-            'is_owner', 'workouts_count', 'avg_workout_duration',
-            'total_calories', 'goals'
+            'profile_image', 'date_of_birth', 'created_at', 
+            'updated_at', 'gender', 'is_owner', 'workouts_count', 'goals', 'age'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
 
     def get_goals(self, obj):
-        """Get user's goals with progress information"""
-        return GoalSerializer(obj.user.goals.all(), many=True).data
+        """Get user's goals from the UserProfile."""
+        return GoalSerializer(obj.goals.all(), many=True).data  # Change here
 
     def get_is_owner(self, obj):
         request = self.context.get('request')
@@ -53,11 +48,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 return None
         return None
 
-    def get_bmi(self, obj):
-        return obj.calculate_bmi()
-
     def get_age(self, obj):
-        return obj.get_age()
+        """Calculate age from date_of_birth."""
+        if obj.date_of_birth:
+            today = timezone.now().date()
+            return today.year - obj.date_of_birth.year - (
+                (today.month, today.day) < (obj.date_of_birth.month, obj.date_of_birth.day)
+            )
+        return None
 
     def validate_profile_image(self, value):
         if value:
@@ -99,7 +97,7 @@ class GoalSerializer(serializers.ModelSerializer):
         return None
 
     def get_progress(self, obj):
-        """Calculate the goal progress"""
+        """Calculate the goal progress."""
         return obj.calculate_progress()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -148,12 +146,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     goals = GoalSerializer(many=True, read_only=True)
     total_workouts = serializers.IntegerField(read_only=True)
-    total_calories = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'profile', 'goals',
-            'total_workouts', 'total_calories', 'date_joined', 'last_login'
+            'total_workouts', 'date_joined', 'last_login'
         ]
         read_only_fields = ['date_joined', 'last_login']
