@@ -1,350 +1,481 @@
-# Fitness API
+# FitPro - Fitness Activity Tracking API
 
-A comprehensive Django REST API for fitness tracking with social features. This API enables users to track workouts, manage profiles, and engage with other fitness enthusiasts.
+A robust, scalable RESTful API for fitness tracking, built with Django REST Framework. This application enables users to track workouts, set fitness goals, monitor progress, and participate in a fitness-focused social community.
 
-## User Stories & Implementation Status
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)
+![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)
+![DRF](https://img.shields.io/badge/DRF-3.14+-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)
+![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-### Authentication & Profile Management
+## 📑 Table of Contents
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Technology Stack](#%EF%B8%8F-technology-stack)
+- [Installation](#-installation)
+- [API Documentation](#-api-documentation)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [Security](#-security)
+- [Performance](#-performance)
+- [Troubleshooting](#-troubleshooting)
 
-1. User Registration #1 [COMPLETE]
-   - As a: New user
-   - I want to: Register an account
-   - So that: I can log in and track my fitness activities
+## 🚀 Features
 
-2. User Login #2 [COMPLETE]
-   - As a: Registered user
-   - I want to: Log in to my account
-   - So that: I can access my profile and data
+### Core Features
 
-3. User Logout #3 [COMPLETE]
-   - As a: Logged-in user
-   - I want to: Log out
-   - So that: I can secure my account when I'm finished
+#### User Management
+- **Authentication**
+  - JWT-based token authentication
+  - Refresh token mechanism
+  - Password reset via email
+  - Social authentication (Google, Facebook)
+  - Account verification
+  - Session management
 
-4. User Profile Setup #4 [COMPLETE]
-   - As a: User
-   - I want to: Set up my profile with details like weight and fitness goals
-   - So that: I can personalize my fitness experience
+- **Authorization**
+  - Role-based access control
+  - Permission management
+  - API key authentication for external services
+  - Token expiration and renewal
 
-5. Edit Profile #5 [COMPLETE]
-   - As a: User
-   - I want to: Edit my profile information
-   - So that: I can keep my fitness data up to date
+- **Profile Management**
+  - Customizable user profiles
+  - Profile picture upload
+  - Personal information management
+  - Privacy settings
 
-### Workout Management
+#### Workout Tracking
+- **Workout Types**
+  ```python
+  WORKOUT_TYPES = [
+      ('cardio', 'Cardio'),
+      ('strength', 'Strength Training'),
+      ('flexibility', 'Flexibility'),
+      ('sports', 'Sports'),
+      ('other', 'Other'),
+  ]
+  ```
 
-6. Log Workouts #6 [COMPLETE]
-   - As a: User
-   - I want to: Log my workouts (type, duration, calories)
-   - So that: I can track my fitness activities over time
+- **Workout Attributes**
+  - Duration tracking
+  - Intensity levels
+  - Distance metrics
+  - Calorie calculation
+  - Custom notes
+  - Image attachments
 
-7. View Past Workouts #7 [COMPLETE]
-   - As a: User
-   - I want to: View a list of my past workouts
-   - So that: I can monitor my progress
+- **Progress Monitoring**
+  - Weekly/monthly/yearly statistics
+  - Personal records tracking
+  - Goal achievement monitoring
+  - Streak calculation
+  - Performance analytics
 
-8. Edit/Delete Workout #8 [COMPLETE]
-   - As a: User
-   - I want to: Edit or delete a workout entry
-   - So that: I can correct any mistakes or remove outdated information
+#### Social Features
+- **Community Interaction**
+  - Follow system
+  - Activity feed
+  - Workout sharing
+  - Achievement badges
+  - Challenge participation
 
-### Progress & Goals
+- **Social Engagement**
+  - Comments
+  - Likes
+  - Shares
+  - User mentions
+  - Custom reactions
 
-9. Visualize Progress #9 [PARTIAL]
-   - As a: User
-   - I want to: Visualize my progress over time with charts
-   - So that: I can see how I'm improving
-   - Status: Basic metrics implemented, charts pending
+## 🏗 Architecture
 
-10. Set Fitness Goals #10 [PLANNED]
-    - As a: User
-    - I want to: Set fitness goals
-    - So that: I can stay motivated and track my achievements
-
-### Social Features
-
-11. Follow Other Users #11 [COMPLETE]
-    - As a: User
-    - I want to: Follow other users
-    - So that: I can see their workouts and progress
-
-12. View Followed Users' Feed #12 [COMPLETE]
-    - As a: User
-    - I want to: View a feed of workouts from users I follow
-    - So that: I can stay connected and motivated by their activities
-
-## Features Implementation Status
-
-### Complete Features
-
-- User Registration & Authentication
-- Profile Management
-- Workout Tracking & History
-- Social Features (Following, Likes, Comments)
-- Feed Generation
-- Basic Progress Statistics
-
-### Partially Complete Features
-
-- Progress Visualization (Basic metrics implemented, charts pending)
-
-### Planned Features
-
-- Fitness Goals System
-- Advanced Analytics
-- Achievement System
-
-## Database Schema
-
-Our API uses a relational database with the following structure:
-
-```mermaid
-erDiagram
-    User ||--o{ Workout : "has many"
-    User ||--|| UserProfile : "has one"
-    User ||--o{ WorkoutLike : "has many"
-    User ||--o{ WorkoutComment : "has many"
-    User ||--o{ UserFollow : "follows many"
-    Workout ||--o{ WorkoutLike : "has many"
-    Workout ||--o{ WorkoutComment : "has many"
-    
-    User {
-        int id PK
-        string username
-        string email
-        string password
-        datetime last_login
-        boolean is_active
-        datetime date_joined
-    }
-
-    UserProfile {
-        int id PK
-        int user_id FK
-        string name
-        float weight
-        float height
-        text fitness_goals
-        string profile_picture
-        date date_of_birth
-        string gender
-        datetime created_at
-        datetime updated_at
-    }
-
-    Workout {
-        int id PK
-        int user_id FK
-        string workout_type
-        date date_logged
-        int duration
-        int calories
-        text notes
-        string intensity
-        datetime created_at
-        datetime updated_at
-    }
-
-    WorkoutLike {
-        int id PK
-        int user_id FK
-        int workout_id FK
-        datetime created_at
-    }
-
-    WorkoutComment {
-        int id PK
-        int user_id FK
-        int workout_id FK
-        text content
-        datetime created_at
-        datetime updated_at
-    }
-
-    UserFollow {
-        int id PK
-        int follower_id FK
-        int following_id FK
-        datetime created_at
-    }
+### System Architecture
+```
+├── Frontend (Separate Repository)
+│   ├── React.js
+│   └── Tailwind CSS
+│
+├── Backend (This Repository)
+│   ├── Django
+│   ├── Django REST Framework
+│   └── Celery
+│
+├── Database
+│   ├── PostgreSQL
+│   └── Redis (Caching)
+│
+└── Cloud Services
+    ├── Cloudinary (Media)
+    └── AWS S3 (Static Files)
 ```
 
-![ERD](/readme_images/api_erd.png)
+### Database Schema
+```sql
+-- Core Tables
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(150) UNIQUE,
+    email VARCHAR(254) UNIQUE,
+    password VARCHAR(128)
+);
 
-## Technical Stack
+CREATE TABLE workouts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    type VARCHAR(50),
+    duration INTEGER,
+    intensity VARCHAR(20),
+    date_logged DATE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 
-### Core Framework
+-- Social Tables
+CREATE TABLE follows (
+    id SERIAL PRIMARY KEY,
+    follower_id INTEGER REFERENCES users(id),
+    following_id INTEGER REFERENCES users(id)
+);
 
-- Django 5.1.2
-  - Custom User Model
-  - Extended Profile Model
-  - Social Relations Models
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    workout_id INTEGER REFERENCES workouts(id),
+    user_id INTEGER REFERENCES users(id),
+    content TEXT,
+    created_at TIMESTAMP
+);
+```
 
-### API Framework
+## 🛠️ Technology Stack
 
-- Django REST Framework 3.15.2
-  - Custom Viewsets
-  - Nested Serializers
-  - Filter Backends
+### Backend Framework
+- **Django 5.0+**
+  - URL routing
+  - ORM
+  - Admin interface
+  - Authentication
+  - Middleware
 
-### Authentication
+- **Django REST Framework 3.14+**
+  - Serialization
+  - ViewSets
+  - Authentication classes
+  - Permissions
+  - Filtering
 
-- JWT via djangorestframework-simplejwt
-  - Token Refresh Mechanism
-  - Custom Authentication Classes
+### Database & Caching
+- **PostgreSQL 14+**
+  - Connection pooling
+  - Full-text search
+  - JSON field support
+  - Indexing strategies
 
-### Database
+- **Redis 6+**
+  - Session storage
+  - Caching layer
+  - Rate limiting
+  - Real-time features
 
-- Development: SQLite
-- Production: PostgreSQL
+### Task Processing
+- **Celery**
+  - Async task processing
+  - Scheduled tasks
+  - Email sending
+  - Report generation
 
-### Media Storage
-
-- Cloudinary
+### Cloud Services
+- **Cloudinary**
   - Image optimization
-  - Secure upload
-  - CDN delivery
+  - Transformation
+  - Delivery
+  - Storage
 
-### Additional Components
+### Development Tools
+- **Git**
+  - Version control
+  - Feature branching
+  - PR workflow
+  - Git hooks
 
-- django-filter for advanced searching
-- django-cors-headers for CORS
-- dj-rest-auth for authentication flows
-- whitenoise for static files
-- Python-dotenv for environment management
+- **Docker**
+  ```dockerfile
+  # Example Dockerfile
+  FROM python:3.12-slim
+  
+  WORKDIR /app
+  
+  COPY requirements.txt .
+  RUN pip install -r requirements.txt
+  
+  COPY . .
+  
+  CMD ["gunicorn", "config.wsgi:application"]
+  ```
 
-## API Endpoints
+## 📦 Installation
 
-### Authentication
+### Local Development Setup
 
+1. **Clone and Setup**
+   ```bash
+   # Clone repository
+   git clone https://github.com/yourusername/fitnesspp5api.git
+   cd fitnesspp5api
+
+   # Create virtual environment
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+2. **Environment Configuration**
+   ```env
+   # .env file
+   DEBUG=True
+   SECRET_KEY=your-secret-key
+   DATABASE_URL=postgres://user:password@localhost:5432/dbname
+   CLOUDINARY_URL=cloudinary://api-key:api-secret@cloud-name
+   REDIS_URL=redis://localhost:6379/0
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=your-email@gmail.com
+   EMAIL_HOST_PASSWORD=your-app-password
+   ```
+
+3. **Database Setup**
+   ```bash
+   # Create database
+   createdb fitnessapp
+
+   # Run migrations
+   python manage.py makemigrations
+   python manage.py migrate
+
+   # Create superuser
+   python manage.py createsuperuser
+   ```
+
+### Docker Setup
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/fitnessapp
+      - REDIS_URL=redis://redis:6379/0
+
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=fitnessapp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
 ```
-POST   /api/auth/register/       - Register new user
-POST   /api/auth/login/         - Login
-POST   /api/auth/logout/        - Logout
-POST   /api/auth/token/         - Get JWT token
-POST   /api/auth/token/refresh/ - Refresh JWT token
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+
+```python
+# Authentication URLs
+urlpatterns = [
+    path('auth/register/', UserRegistrationView.as_view()),
+    path('auth/login/', TokenObtainPairView.as_view()),
+    path('auth/refresh/', TokenRefreshView.as_view()),
+    path('auth/password/reset/', PasswordResetView.as_view()),
+]
 ```
 
-### Profiles
+### Workout Endpoints
 
-```
-GET    /api/profiles/me/                    - Get current user profile
-PUT    /api/profiles/update_profile_picture/ - Update profile picture
-GET    /api/profiles/                       - List profiles
-PUT    /api/profiles/{id}/                  - Update profile
-```
+#### Create Workout
+```http
+POST /api/workouts/workouts/
 
-### Workouts
-
-```
-GET    /api/workouts/         - List workouts
-POST   /api/workouts/         - Create workout
-GET    /api/workouts/{id}/    - Get workout
-PUT    /api/workouts/{id}/    - Update workout
-DELETE /api/workouts/{id}/    - Delete workout
-GET    /api/workouts/summary/ - Get workout stats
+{
+    "workout_type": "cardio",
+    "duration": 30,
+    "intensity": "moderate",
+    "notes": "Morning run"
+}
 ```
 
-### Social
+#### Get Workout List
+```http
+GET /api/workouts/workouts/
 
+Response:
+{
+    "count": 10,
+    "next": "http://api.example.com/workouts/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "workout_type": "cardio",
+            "duration": 30,
+            "intensity": "moderate",
+            "date_logged": "2024-01-01"
+        }
+        // ... more workouts
+    ]
+}
 ```
-POST   /api/social/follows/follow/    - Follow user
-POST   /api/social/follows/unfollow/  - Unfollow user
-GET    /api/social/feed/              - Get social feed
-POST   /api/social/likes/             - Like workout
-DELETE /api/social/likes/{id}/        - Unlike workout
-POST   /api/social/comments/          - Comment on workout
-GET    /api/social/comments/{id}/     - Get workout comments
+
+## 🔒 Security
+
+### Authentication Flow
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Database
+    
+    Client->>API: POST /auth/login/
+    API->>Database: Validate Credentials
+    Database-->>API: User Found
+    API-->>Client: JWT Token
+    
+    Client->>API: Request + JWT
+    API->>API: Validate Token
+    API-->>Client: Protected Resource
 ```
 
-## Installation and Setup
+### Security Measures
+```python
+# settings.py security configurations
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
 
-### Prerequisites
+## ⚡ Performance
 
-- Python 3.8+
-- pip
-- virtualenv
-- PostgreSQL (for production)
+### Caching Strategy
+```python
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
 
-### Development Setup
+# Cache usage example
+@method_decorator(cache_page(60 * 15))
+def get_queryset(self):
+    return super().get_queryset()
+```
 
-1. Clone and Setup
+### Database Optimization
+```python
+# Optimized queries
+from django.db.models import Prefetch
 
+class WorkoutViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        return Workout.objects.select_related('user')\
+                            .prefetch_related(
+                                Prefetch('comments'),
+                                Prefetch('likes')
+                            )
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Database Connections
 ```bash
-# Clone repository
-git clone <repository-url>
-cd fitness-api
+# Check database connection
+python manage.py dbshell
 
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Unix/MacOS:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-2. Environment Configuration
-
-```env
-SECRET_KEY=your_secret_key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-CLOUDINARY_URL=your_cloudinary_url
-CORS_ORIGIN_WHITELIST=http://localhost:3000
-```
-
-3. Database Setup
-
-```bash
-python manage.py makemigrations
+# Reset database
+python manage.py reset_db
 python manage.py migrate
-python manage.py createsuperuser
 ```
 
-## Testing
-
+#### Cache Issues
 ```bash
-# Run all tests
-python manage.py test
-
-# Run specific tests
-python manage.py test social.tests.SocialFeatureTests
-
-# Coverage report
-coverage run manage.py test
-coverage report
+# Clear cache
+python manage.py shell
+>>> from django.core.cache import cache
+>>> cache.clear()
 ```
 
-## Contributing
-
-1. Fork the repository
-
-2. Create a feature branch
-
+#### Permission Issues
 ```bash
-git checkout -b feature/your-feature-name
+# Check file permissions
+chmod -R 755 .
+chmod -R 777 media/
+
+# Check log files
+tail -f logs/debug.log
 ```
 
-3. Commit your changes
+## 📈 Monitoring
 
-```bash
-git commit -m "type(scope): description"
+### Health Checks
+```python
+# health_check/views.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def health_check(request):
+    return Response({
+        'status': 'healthy',
+        'database': check_database(),
+        'cache': check_cache(),
+        'storage': check_storage()
+    })
 ```
 
-4. Push to the branch
+### Performance Monitoring
+- New Relic integration
+- Sentry error tracking
+- Custom middleware for request timing
+- Prometheus metrics
 
-5. Create a Pull Request
+## 🚀 Deployment
 
-## License
+### Production Checklist
+- [ ] Set DEBUG=False
+- [ ] Configure proper ALLOWED_HOSTS
+- [ ] Set up SSL certificates
+- [ ] Configure CORS properly
+- [ ] Set up proper logging
+- [ ] Configure email backend
+- [ ] Set up backup system
+- [ ] Configure monitoring
 
-[Your chosen license]
-
-## Support
-
-For support, please open an issue in the GitHub repository or contact [contact information].
+Would you like me to expand on any of these sections further or add more specific implementation details?

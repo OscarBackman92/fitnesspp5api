@@ -31,7 +31,9 @@ urlpatterns = [
     # API endpoints
     path('api/', include([
         path('', include('api.urls')),  # API root and main endpoints
-        path('workouts/', include('workouts.urls', namespace='workouts')),  # Workouts endpoints
+        path('workouts/', include([
+            path('workouts/', include('workouts.urls', namespace='workouts')),  # Workouts endpoints
+        ])),
         path('', include('social.urls')),  # Social endpoints
         # Authentication endpoints
         path('auth/', include([

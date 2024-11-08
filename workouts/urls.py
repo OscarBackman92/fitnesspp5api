@@ -1,12 +1,16 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 from .views import WorkoutViewSet
-from social.views import WorkoutCommentViewSet, WorkoutLikeViewSet
 
 app_name = 'workouts'
 
-urlpatterns = [
-    path('workouts/', WorkoutViewSet.as_view({'get': 'list', 'post': 'create'}), name='workout-list'),
-    path('workouts/<int:pk>/', WorkoutViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='workout-detail'),
-    path('workouts/<int:workout_id>/comments/', WorkoutCommentViewSet.as_view({'post': 'create'}), name='workout-comment'),
-    path('workouts/<int:workout_id>/likes/', WorkoutLikeViewSet.as_view({'post': 'create'}), name='workout-like'),
-]
+router = DefaultRouter()
+router.register('', WorkoutViewSet, basename='workout')
+
+# The router will generate these URLs:
+# /api/workouts/workouts/ - for list and create
+# /api/workouts/workouts/{id}/ - for retrieve, update, delete
+# /api/workouts/workouts/statistics/ - for statistics
+# /api/workouts/workouts/summary/ - for summary
+
+urlpatterns = router.urls
