@@ -1,265 +1,416 @@
-# FitPro - Fitness Activity Tracking API
+# FitTrack - Fitness Activity Tracking API
 
-A robust, scalable RESTful API for fitness tracking, built with Django REST Framework. This application enables users to track workouts, set fitness goals, monitor progress, and participate in a fitness-focused social community.
+[PROJECT LOGO PLACEHOLDER]
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)
-![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)
-![DRF](https://img.shields.io/badge/DRF-3.14+-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)
-![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
+A comprehensive Django REST Framework-powered fitness tracking platform that enables users to track workouts, set goals, and build a fitness community.
 
-## 📑 Table of Contents
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Technology Stack](#%EF%B8%8F-technology-stack)
-- [Installation](#-installation)
-- [API Documentation](#-api-documentation)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [Security](#-security)
-- [Performance](#-performance)
-- [Troubleshooting](#-troubleshooting)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)](https://python.org)
+[![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)](https://www.djangoproject.com/)
+[![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)](https://coverage.readthedocs.io/)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yourusername/fitnesspp5api/actions)
 
-## 🚀 Features
+[DASHBOARD SCREENSHOT PLACEHOLDER]
 
-### Core Features
+## Table of Contents
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Dependencies](#dependencies)
+4. [API Documentation](#api-documentation)
+5. [Installation & Setup](#installation--setup)
+6. [Testing](#testing)
+7. [Development](#development)
+8. [Database Schema](#database-schema)
+9. [User Stories](#user-stories)
+10. [Security](#security)
+11. [Deployment](#deployment)
+12. [Contributing](#contributing)
+13. [Troubleshooting](#troubleshooting)
+14. [License](#license)
+15. [Contact](#contact)
 
-#### User Management
-- **Authentication**
-  - JWT-based token authentication
-  - Refresh token mechanism
-  - Password reset via email
-  - Social authentication (Google, Facebook)
-  - Account verification
-  - Session management
+## Overview
 
-- **Authorization**
-  - Role-based access control
-  - Permission management
-  - API key authentication for external services
-  - Token expiration and renewal
+FitTrack is a robust REST API designed to provide a comprehensive fitness tracking solution. The platform enables users to monitor various types of workouts, track progress, and engage with a fitness community.
 
-- **Profile Management**
-  - Customizable user profiles
-  - Profile picture upload
-  - Personal information management
-  - Privacy settings
+[ARCHITECTURE DIAGRAM PLACEHOLDER]
 
-#### Workout Tracking
-- **Workout Types**
-  ```python
-  WORKOUT_TYPES = [
-      ('cardio', 'Cardio'),
-      ('strength', 'Strength Training'),
-      ('flexibility', 'Flexibility'),
-      ('sports', 'Sports'),
-      ('other', 'Other'),
-  ]
-  ```
+## Features
 
-- **Workout Attributes**
-  - Duration tracking
-  - Intensity levels
-  - Distance metrics
-  - Calorie calculation
-  - Custom notes
-  - Image attachments
+### Core Functionality
+1. User Management and Authentication
+2. Workout Tracking and Analysis
+3. Social Interaction Features
+4. Progress Monitoring
+5. Goal Setting and Achievement
 
-- **Progress Monitoring**
-  - Weekly/monthly/yearly statistics
-  - Personal records tracking
-  - Goal achievement monitoring
-  - Streak calculation
-  - Performance analytics
+## Dependencies
 
-#### Social Features
-- **Community Interaction**
-  - Follow system
-  - Activity feed
-  - Workout sharing
-  - Achievement badges
-  - Challenge participation
+### Core Requirements
+```txt
+# Core Django
+Django==5.1.2
+asgiref==3.8.1
+sqlparse==0.5.1
+typing_extensions==4.12.2
+tzdata==2024.2
 
-- **Social Engagement**
-  - Comments
-  - Likes
-  - Shares
-  - User mentions
-  - Custom reactions
+# Django REST Framework & Extensions
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+drf-nested-routers==0.94.1
+drf-yasg==1.21.8
 
-## 🏗 Architecture
+# Database
+psycopg2==2.9.9
+psycopg2-binary==2.9.10
+dj-database-url==2.2.0
 
-### System Architecture
-```
-├── Frontend (Separate Repository)
-│   ├── React.js
-│   └── Tailwind CSS
-│
-├── Backend (This Repository)
-│   ├── Django
-│   ├── Django REST Framework
-│   └── Celery
-│
-├── Database
-│   ├── PostgreSQL
-│   └── Redis (Caching)
-│
-└── Cloud Services
-    ├── Cloudinary (Media)
-    └── AWS S3 (Static Files)
+# Authentication & Authorization
+dj-rest-auth==6.0.0
+django-allauth==65.0.0
+PyJWT==2.9.0
+
+# Storage & Media
+cloudinary==1.41.0
+django-cloudinary-storage==0.3.0
+whitenoise==6.7.0
+pillow==11.0.0
+
+# Additional Dependencies
+[... rest of dependencies ...]
 ```
 
-### Database Schema
-```sql
--- Core Tables
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(150) UNIQUE,
-    email VARCHAR(254) UNIQUE,
-    password VARCHAR(128)
-);
+## API Documentation
 
-CREATE TABLE workouts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    type VARCHAR(50),
-    duration INTEGER,
-    intensity VARCHAR(20),
-    date_logged DATE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
+### Authentication Endpoints
 
--- Social Tables
-CREATE TABLE follows (
-    id SERIAL PRIMARY KEY,
-    follower_id INTEGER REFERENCES users(id),
-    following_id INTEGER REFERENCES users(id)
-);
+#### Registration
+```http
+POST /api/auth/register/
+Content-Type: application/json
 
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    workout_id INTEGER REFERENCES workouts(id),
-    user_id INTEGER REFERENCES users(id),
-    content TEXT,
-    created_at TIMESTAMP
-);
+{
+    "username": "string",
+    "email": "user@example.com",
+    "password": "string"
+}
 ```
 
-## 🛠️ Technology Stack
+#### Login
+```http
+POST /api/auth/login/
+Content-Type: application/json
 
-### Backend Framework
-- **Django 5.0+**
-  - URL routing
-  - ORM
-  - Admin interface
-  - Authentication
-  - Middleware
+{
+    "email": "user@example.com",
+    "password": "string"
+}
+```
 
-- **Django REST Framework 3.14+**
-  - Serialization
-  - ViewSets
-  - Authentication classes
-  - Permissions
-  - Filtering
+### Workout Endpoints
 
-### Database & Caching
-- **PostgreSQL 14+**
-  - Connection pooling
-  - Full-text search
-  - JSON field support
-  - Indexing strategies
+#### Create Workout
+```http
+POST /api/workouts/
+Authorization: Bearer <token>
+Content-Type: application/json
 
-- **Redis 6+**
-  - Session storage
-  - Caching layer
-  - Rate limiting
-  - Real-time features
+{
+    "workout_type": "cardio",
+    "duration": 30,
+    "intensity": "moderate",
+    "notes": "Morning run"
+}
+```
 
-### Task Processing
-- **Celery**
-  - Async task processing
-  - Scheduled tasks
-  - Email sending
-  - Report generation
+## Installation & Setup
 
-### Cloud Services
-- **Cloudinary**
-  - Image optimization
-  - Transformation
-  - Delivery
-  - Storage
-
-### Development Tools
-- **Git**
-  - Version control
-  - Feature branching
-  - PR workflow
-  - Git hooks
-
-- **Docker**
-  ```dockerfile
-  # Example Dockerfile
-  FROM python:3.12-slim
-  
-  WORKDIR /app
-  
-  COPY requirements.txt .
-  RUN pip install -r requirements.txt
-  
-  COPY . .
-  
-  CMD ["gunicorn", "config.wsgi:application"]
-  ```
-
-## 📦 Installation
+### Prerequisites
+- Python 3.12+
+- PostgreSQL
+- Redis
+- Node.js 18+ (for frontend development)
 
 ### Local Development Setup
 
-1. **Clone and Setup**
-   ```bash
-   # Clone repository
-   git clone https://github.com/yourusername/fitnesspp5api.git
-   cd fitnesspp5api
+1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/fitnesspp5api.git
+cd fitnesspp5api
+```
 
-   # Create virtual environment
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
+2. Create Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+```
 
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
+3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-2. **Environment Configuration**
-   ```env
-   # .env file
-   DEBUG=True
-   SECRET_KEY=your-secret-key
-   DATABASE_URL=postgres://user:password@localhost:5432/dbname
-   CLOUDINARY_URL=cloudinary://api-key:api-secret@cloud-name
-   REDIS_URL=redis://localhost:6379/0
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_HOST_USER=your-email@gmail.com
-   EMAIL_HOST_PASSWORD=your-app-password
-   ```
+4. Environment Configuration
+```bash
+# Create .env file
+cp .env.example .env
 
-3. **Database Setup**
-   ```bash
-   # Create database
-   createdb fitnessapp
+# Update .env with your values
+DEBUG=True
+SECRET_KEY=your_secret_key
+DATABASE_URL=postgres://user:pass@localhost:5432/dbname
+CLOUDINARY_URL=cloudinary://your_cloudinary_url
+REDIS_URL=redis://localhost:6379/0
+```
 
-   # Run migrations
-   python manage.py makemigrations
-   python manage.py migrate
+5. Database Setup
+```bash
+# Create database
+createdb fitnessdb
 
-   # Create superuser
-   python manage.py createsuperuser
-   ```
+# Run migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+```
+
+6. Start Development Server
+```bash
+python manage.py runserver
+```
 
 ### Docker Setup
+
+1. Build Container
+```bash
+docker build -t fitnessapp .
+```
+
+2. Run Container
+```bash
+docker run -p 8000:8000 fitnessapp
+```
+
+## Testing
+
+### Running Tests
+```bash
+# Run all tests
+python manage.py test
+
+# Run specific test
+python manage.py test workouts.tests.test_views
+
+# Run with coverage
+coverage run manage.py test
+coverage report
+```
+
+### Test Categories
+1. Unit Tests
+2. Integration Tests
+3. API Tests
+4. Performance Tests
+
+## Development
+
+### Code Style
+- Follow PEP 8
+- Use Black for formatting
+- Maximum line length: 88 characters
+
+### Git Workflow
+1. Create feature branch
+2. Implement changes
+3. Run tests
+4. Submit pull request
+
+### Pre-commit Hooks
+```bash
+# Install pre-commit
+pip install pre-commit
+pre-commit install
+
+# Run hooks
+pre-commit run --all-files
+```
+
+## Database Schema
+
+### Tables
+1. Users
+2. Workouts
+3. Goals
+4. Social Interactions
+
+[DETAILED ERD DIAGRAM PLACEHOLDER]
+
+## User Stories
+
+[Detailed user stories documentation continues...]
+
+## User Stories
+
+### Epic 1: Authentication & Profile Management
+
+#### User Registration (#1)
+```
+As a new user
+I want to register an account
+So that I can access the fitness tracking features
+
+Acceptance Criteria:
+- User can fill out registration form
+- User receives confirmation email
+- User can verify email address
+- User can set initial profile information
+```
+
+#### User Login (#2)
+```
+As a registered user
+I want to login to my account
+So that I can access my fitness data
+
+Acceptance Criteria:
+- User can login with email/password
+- User receives authentication token
+- User stays logged in across sessions
+- User can reset password if forgotten
+```
+
+### Epic 2: Workout Management
+
+#### Log Workout (#3)
+```
+As a logged-in user
+I want to record my workouts
+So that I can track my fitness activities
+
+Acceptance Criteria:
+- User can input workout details
+- User can add workout duration
+- User can specify intensity
+- User can add notes
+- User can attach images
+```
+
+[Additional user stories continue...]
+
+## Security
+
+### Authentication
+- JWT-based authentication
+- Token refresh mechanism
+- Password hashing using Argon2
+- Rate limiting on auth endpoints
+
+### Data Protection
+```python
+# Security Middleware Configuration
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    # ...
+]
+
+# Security Settings
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
+
+### API Security
+- Request validation
+- Input sanitization
+- SQL injection protection
+- XSS protection
+
+### CORS Configuration
+```python
+CORS_ALLOWED_ORIGINS = [
+    "https://yourfrontend.com",
+    "http://localhost:3000",
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+```
+
+## Deployment
+
+### Production Checklist
+
+1. Environment Configuration
+```bash
+# Production settings
+DEBUG=False
+ALLOWED_HOSTS=your-domain.com
+SECURE_SSL_REDIRECT=True
+```
+
+2. Database Setup
+```bash
+# Run migrations
+python manage.py migrate --no-input
+
+# Create superuser
+python manage.py createsuperuser --no-input
+```
+
+3. Static Files
+```bash
+# Collect static files
+python manage.py collectstatic --no-input
+
+# Configure whitenoise
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+```
+
+### Deployment Options
+
+#### Heroku Deployment
+```bash
+# Create Heroku app
+heroku create your-app-name
+
+# Add buildpacks
+heroku buildpacks:add heroku/python
+
+# Configure environment
+heroku config:set DJANGO_SETTINGS_MODULE=config.settings.production
+
+# Deploy
+git push heroku main
+```
+
+#### Docker Deployment
+```dockerfile
+# Dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["gunicorn", "config.wsgi:application"]
+```
+
 ```yaml
 # docker-compose.yml
 version: '3.8'
@@ -273,109 +424,11 @@ services:
       - db
       - redis
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/fitnessapp
-      - REDIS_URL=redis://redis:6379/0
-
-  db:
-    image: postgres:14
-    environment:
-      - POSTGRES_DB=fitnessapp
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
 ```
 
-## 📚 API Documentation
-
-### Authentication Endpoints
-
-```python
-# Authentication URLs
-urlpatterns = [
-    path('auth/register/', UserRegistrationView.as_view()),
-    path('auth/login/', TokenObtainPairView.as_view()),
-    path('auth/refresh/', TokenRefreshView.as_view()),
-    path('auth/password/reset/', PasswordResetView.as_view()),
-]
-```
-
-### Workout Endpoints
-
-#### Create Workout
-```http
-POST /api/workouts/workouts/
-
-{
-    "workout_type": "cardio",
-    "duration": 30,
-    "intensity": "moderate",
-    "notes": "Morning run"
-}
-```
-
-#### Get Workout List
-```http
-GET /api/workouts/workouts/
-
-Response:
-{
-    "count": 10,
-    "next": "http://api.example.com/workouts/?page=2",
-    "previous": null,
-    "results": [
-        {
-            "id": 1,
-            "workout_type": "cardio",
-            "duration": 30,
-            "intensity": "moderate",
-            "date_logged": "2024-01-01"
-        }
-        // ... more workouts
-    ]
-}
-```
-
-## 🔒 Security
-
-### Authentication Flow
-```mermaid
-sequenceDiagram
-    participant Client
-    participant API
-    participant Database
-    
-    Client->>API: POST /auth/login/
-    API->>Database: Validate Credentials
-    Database-->>API: User Found
-    API-->>Client: JWT Token
-    
-    Client->>API: Request + JWT
-    API->>API: Validate Token
-    API-->>Client: Protected Resource
-```
-
-### Security Measures
-```python
-# settings.py security configurations
-SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-```
-
-## ⚡ Performance
+## Performance Optimization
 
 ### Caching Strategy
 ```python
@@ -383,7 +436,7 @@ CSRF_COOKIE_SECURE = True
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL'),
+        'LOCATION': os.getenv('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -397,20 +450,64 @@ def get_queryset(self):
 ```
 
 ### Database Optimization
-```python
-# Optimized queries
-from django.db.models import Prefetch
+- Proper indexing
+- Query optimization
+- Connection pooling
+- Efficient relationships
 
-class WorkoutViewSet(viewsets.ModelViewSet):
-    def get_queryset(self):
-        return Workout.objects.select_related('user')\
-                            .prefetch_related(
-                                Prefetch('comments'),
-                                Prefetch('likes')
-                            )
+### API Optimization
+- Pagination
+- Field filtering
+- Eager loading
+- Response compression
+
+## Contributing
+
+### Getting Started
+1. Fork the repository
+2. Create feature branch
+3. Install dependencies
+4. Run tests
+
+### Development Process
+1. Write tests first
+2. Implement features
+3. Document changes
+4. Submit pull request
+
+### Code Style Guidelines
+```bash
+# Install development dependencies
+pip install -r requirements.dev.txt
+
+# Run formatter
+black .
+
+# Run linter
+flake8
 ```
 
-## 🔧 Troubleshooting
+### Commit Message Format
+```
+type(scope): subject
+
+body
+
+footer
+```
+
+Example:
+```
+feat(auth): add password reset functionality
+
+- Add password reset endpoints
+- Implement email notification
+- Add password reset templates
+
+Closes #123
+```
+
+## Troubleshooting
 
 ### Common Issues
 
@@ -432,50 +529,34 @@ python manage.py shell
 >>> cache.clear()
 ```
 
-#### Permission Issues
+#### Static Files
 ```bash
-# Check file permissions
-chmod -R 755 .
-chmod -R 777 media/
+# Collect static files
+python manage.py collectstatic --no-input
 
-# Check log files
-tail -f logs/debug.log
+# Check static files directory
+python manage.py findstatic css/main.css
 ```
 
-## 📈 Monitoring
+## License
 
-### Health Checks
-```python
-# health_check/views.py
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-@api_view(['GET'])
-def health_check(request):
-    return Response({
-        'status': 'healthy',
-        'database': check_database(),
-        'cache': check_cache(),
-        'storage': check_storage()
-    })
+```text
+MIT License
+
+Copyright (c) 2024 Your Name
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software...
 ```
 
-### Performance Monitoring
-- New Relic integration
-- Sentry error tracking
-- Custom middleware for request timing
-- Prometheus metrics
+## Contact
 
-## 🚀 Deployment
+- Author: Your Name
+- Email: your.email@example.com
+- Project Link: https://github.com/yourusername/fitnesspp5api
 
-### Production Checklist
-- [ ] Set DEBUG=False
-- [ ] Configure proper ALLOWED_HOSTS
-- [ ] Set up SSL certificates
-- [ ] Configure CORS properly
-- [ ] Set up proper logging
-- [ ] Configure email backend
-- [ ] Set up backup system
-- [ ] Configure monitoring
+### Support
+For support, email support@yourproject.com or join our Slack channel.
 
-Would you like me to expand on any of these sections further or add more specific implementation details?
