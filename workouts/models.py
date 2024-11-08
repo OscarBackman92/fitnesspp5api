@@ -66,3 +66,20 @@ class Workout(models.Model):
     def get_duration_in_hours(self):
         """Convert duration from minutes to hours."""
         return round(self.duration / 60, 2)
+
+class WorkoutLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_likes_workouts')
+    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='workout_likes_workouts')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'workout')
+
+class WorkoutComment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_comments_workouts')
+    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='workout_comments_workouts')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

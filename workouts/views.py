@@ -7,31 +7,24 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Workout
-from .serializers import WorkoutSerializer
+from .models import Workout, WorkoutComment, WorkoutLike  # Ensure these models are imported
+from .serializers import WorkoutSerializer, WorkoutCommentSerializer, WorkoutLikeSerializer
 from api.permissions import IsOwnerOrReadOnly
 from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
 class WorkoutViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing workout operations.
-    Provides CRUD operations and additional functionality for workout data.
-    """
     serializer_class = WorkoutSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['workout_type', 'date_logged', 'intensity']
     search_fields = ['workout_type', 'notes']
     ordering_fields = ['date_logged', 'duration']
-    ordering = ['-date_logged']  # Default ordering
+    ordering = ['-date_logged']
 
     def get_queryset(self):
-        """Get base queryset filtered by user and optionally by date range."""
         queryset = Workout.objects.filter(user=self.request.user)
-
-        # Date filtering
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
 
@@ -54,35 +47,27 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         return queryset.select_related('user')
 
     def perform_create(self, serializer):
-        """Create a new workout instance and log the action."""
         workout = serializer.save(user=self.request.user)
         logger.info(f"Workout created successfully for user {self.request.user.id}: {workout}")
 
     def perform_update(self, serializer):
-        """Update a workout instance and log the action."""
         workout = serializer.save()
         logger.info(f"Workout updated successfully: {workout}")
 
     def perform_destroy(self, instance):
-        """Delete a workout instance and log the action."""
         workout_id = instance.id
         instance.delete()
         logger.info(f"Workout deleted successfully: {workout_id}")
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """Generate a summary of user's workout statistics."""
         user_workouts = self.get_queryset()
         total_workouts = user_workouts.count()
         stats = user_workouts.aggregate(
             total_duration=Sum('duration') or 0,
             avg_duration=Avg('duration') or 0
         )
-
-        # Handle None values for avg_duration
-        avg_duration = stats['avg_duration']
-        if avg_duration is None:
-            avg_duration = 0  # Set to 0 or another default value if there are no workouts
+        avg_duration = stats['avg_duration'] or 0
 
         return Response({
             'total_workouts': total_workouts,
@@ -93,7 +78,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """Provide detailed workout statistics including trends and patterns."""
         queryset = self.get_queryset()
 
         return Response({
@@ -104,7 +88,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         })
 
     def _get_workout_type_distribution(self, queryset):
-        """Calculate distribution of workout types."""
         return (
             queryset
             .values('workout_type')
@@ -117,7 +100,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _get_monthly_trends(self, queryset):
-        """Calculate monthly workout trends."""
         return (
             queryset
             .annotate(month=TruncMonth('date_logged'))
@@ -131,7 +113,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _get_intensity_distribution(self, queryset):
-        """Calculate distribution of workout intensities."""
         return (
             queryset
             .values('intensity')
@@ -144,7 +125,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         )
 
     def _calculate_streaks(self, queryset):
-        """Calculate workout streaks."""
         today = timezone.now().date()
         dates = list(
             queryset
@@ -178,3 +158,12 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             'first_workout': dates[0].isoformat() if dates else None,
             'total_active_days': len(dates)
         }
+
+class WorkoutCommentViewSet(viewsets.ModelViewSet):
+    queryset = WorkoutComment.objects.all()
+    serializer_class = WorkoutCommentSerializer
+    http_method_names = ['get', 'post', 'delete']
+
+class WorkoutLikeViewSet(viewsets.ModelViewSet):
+    queryset = WorkoutLike.objects.all()
+    serializer_class = WorkoutLikeSerializer
