@@ -1,3 +1,4 @@
+# config/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
@@ -6,6 +7,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import api_root  # Import from local views
 
 # Swagger/OpenAPI schema configuration
 schema_view = get_schema_view(
@@ -22,9 +24,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    # Redirect root to API root
-    path('', RedirectView.as_view(url='/api/', permanent=False)),
-
+    # Root endpoint redirects to API root
+    path('', api_root, name='api-root'),
+    
     # Admin site
     path('admin/', admin.site.urls),
 
@@ -32,7 +34,7 @@ urlpatterns = [
     path('api/', include([
         path('', include('api.urls')),  # API root and main endpoints
         path('workouts/', include([
-            path('workouts/', include('workouts.urls', namespace='workouts')),  # Workouts endpoints
+            path('workouts/', include('workouts.urls', namespace='workouts')),
         ])),
         path('', include('social.urls')),  # Social endpoints
         # Authentication endpoints

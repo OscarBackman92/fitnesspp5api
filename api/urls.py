@@ -1,12 +1,17 @@
+# api/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views
-
+from .views import (
+    UserProfileViewSet,
+    GoalViewSet,
+    UserRegistrationView,
+)
 router = DefaultRouter()
-router.register(r'profiles', views.UserProfileViewSet, basename='profile')
-router.register(r'goals', views.GoalViewSet, basename='goal')
+
+router.register(r'profiles', UserProfileViewSet, basename='profile')
+router.register(r'goals', GoalViewSet, basename='goal')
 
 urlpatterns = [
-    path('', views.api_root, name='api-root'),  # Root API endpoint
-    path('', include(router.urls)),  # Include the router URLs
+    path('', include(router.urls)),
+    path('register/', UserRegistrationView.as_view(), name='user-registration'),
 ]

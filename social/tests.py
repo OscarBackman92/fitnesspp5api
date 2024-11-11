@@ -17,14 +17,14 @@ class UserFollowAPITests(TestCase):
     def test_follow_user(self):
         url = reverse('userfollow-toggle-follow')
         response = self.client.post(url, {'user_id': self.other_user.id})
-        self.assertEqual(response.status_code, 201)  # Check that the follow action was successful
+        self.assertEqual(response.status_code, 201)
 
     def test_unfollow_user(self):
-        # First, follow the other user
         self.client.post(reverse('userfollow-toggle-follow'), {'user_id': self.other_user.id})
         url = reverse('userfollow-toggle-follow')
         response = self.client.post(url, {'user_id': self.other_user.id})
-        self.assertEqual(response.status_code, 200)  # Check that the unfollow action was successful
+        self.assertEqual(response.status_code, 200) 
+
 class WorkoutLikeAPITests(TestCase):
     """Test suite for WorkoutLike API endpoints"""
 
@@ -52,7 +52,7 @@ class WorkoutLikeAPITests(TestCase):
 
     def test_unlike_workout(self):
         """Test unliking a workout."""
-        WorkoutLike.objects.create(user=self.user, workout=self.workout)  # Pre-create like
+        WorkoutLike.objects.create(user=self.user, workout=self.workout)
         url = reverse('workoutlike-list')
         response = self.client.post(url, {'workout': self.workout.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)

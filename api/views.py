@@ -1,10 +1,10 @@
 import logging
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import UserProfile, Goal
 from .serializers import (
@@ -17,36 +17,6 @@ from .permissions import IsOwnerOrReadOnly
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])  # Allow any user to access this view
-def api_root(request):
-    """API root view showing available endpoints."""
-    return Response({
-        'profiles': request.build_absolute_uri(reverse('profile-list')),
-        'goals': request.build_absolute_uri(reverse('goal-list')),
-        'auth': {
-            'login': request.build_absolute_uri(reverse('rest_login')),
-            'logout': request.build_absolute_uri(reverse('rest_logout')),
-            'register': request.build_absolute_uri(reverse('rest_register')),
-            'user_details': request.build_absolute_uri(reverse('rest_user_details')),
-        },
-        'workouts': {
-            'list': request.build_absolute_uri(reverse('workouts:workout-list')),
-            'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
-            'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
-        },
-        'social': {
-            'comments': request.build_absolute_uri(reverse('comment-list')),
-            'likes': request.build_absolute_uri(reverse('like-list')),
-            'follows': request.build_absolute_uri(reverse('follow-list')),
-            'toggle_follow': request.build_absolute_uri(reverse('toggle-follow')),
-        },
-        'documentation': {
-            'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),
-            'redoc': request.build_absolute_uri(reverse('schema-redoc')),
-        },
-    })
 
 class UserRegistrationView(generics.CreateAPIView):
     """View for user registration."""
