@@ -1,50 +1,52 @@
+# social/serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserFollow, WorkoutLike, WorkoutComment
 from workouts.serializers import WorkoutSerializer
 
-class UserBasicSerializer(serializers.ModelSerializer):
-    profile_image = serializers.SerializerMethodField()
-
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'profile_image']
-
-    def get_profile_image(self, obj):
-        if hasattr(obj, 'profile') and obj.profile.profile_image:
-            return str(obj.profile.profile_image)
-        return None
+        fields = ['id', 'username', 'profile']
 
 class UserFollowSerializer(serializers.ModelSerializer):
-    follower = UserBasicSerializer(read_only=True)
-    following = UserBasicSerializer(read_only=True)
-
     class Meta:
         model = UserFollow
-        fields = [
-            'id', 'follower', 'following', 'created_at'
-        ]
-        read_only_fields = ['follower']
+        fields = ['id', 'follower', 'following', 'created_at']
 
 class WorkoutLikeSerializer(serializers.ModelSerializer):
-    user = UserBasicSerializer(read_only=True)
-    workout = WorkoutSerializer(read_only=True)
-
     class Meta:
         model = WorkoutLike
-        fields = [
-            'id', 'user', 'workout', 'created_at'
-        ]
-        read_only_fields = ['user']
+        fields = ['id', 'user', 'workout', 'created_at']
 
 class WorkoutCommentSerializer(serializers.ModelSerializer):
-    user = UserBasicSerializer(read_only=True)
-    workout = WorkoutSerializer(read_only=True)
-    
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = WorkoutComment
-        fields = [
-            'id', 'user', 'workout', 'content',
-            'created_at', 'updated_at'
+        fields = ['id', 'user', 'workout', 'content', 'created_at']
+
+class FeedSerializer(WorkoutSerializer):
+    has_liked = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+
+    class Meta(WorkoutSerializer.Meta):
+        fields = WorkoutSerializer.Meta.fields + [
+            'has_liked', 'likes_count', 'comments_count'
         ]
-        read_only_fields = ['user']
+
+    def get_has_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return WorkoutLike.objects.filter(
+                user=request.user, 
+                workout=obj
+            ).exists()
+        return False
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()

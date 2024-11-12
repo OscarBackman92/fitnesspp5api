@@ -1,4 +1,3 @@
-# config/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
@@ -36,7 +35,7 @@ urlpatterns = [
         path('workouts/', include([
             path('workouts/', include('workouts.urls', namespace='workouts')),
         ])),
-        path('', include('social.urls')),  # Social endpoints
+        path('social/', include('social.urls')),  # Social endpoints
         # Authentication endpoints
         path('auth/', include([
             path('', include('dj_rest_auth.urls')),
