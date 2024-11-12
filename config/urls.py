@@ -6,15 +6,15 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import api_root  # Import from local views
+from .views import api_root
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Fitness API",
+        title="FitTrack API",
         default_version='v1',
-        description="API for Fitness tracking application",
+        description="API for FitTrack fitness tracking application",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@fitness.local"),
+        contact=openapi.Contact(email="contact@fittrack.local"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
@@ -32,7 +32,7 @@ urlpatterns = [
     path('api/', include([
         path('', include('api.urls')),  # API root and main endpoints
         path('workouts/', include('workouts.urls', namespace='workouts')),
-        path('social/', include('social.urls')),  # Social endpoints
+        path('social/', include('social.urls', namespace='social')),
         # Authentication endpoints
         path('auth/', include([
             path('', include('dj_rest_auth.urls')),
@@ -43,7 +43,6 @@ urlpatterns = [
     # API Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]
 
 # Debug toolbar (only in development)

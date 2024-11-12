@@ -8,29 +8,32 @@ from django.urls import reverse
 def api_root(request):
     """API root view showing available endpoints."""
     return Response({
-        'profiles': request.build_absolute_uri(reverse('profile-list')),
-        'goals': request.build_absolute_uri(reverse('goal-list')),
         'auth': {
             'login': request.build_absolute_uri(reverse('rest_login')),
             'logout': request.build_absolute_uri(reverse('rest_logout')),
             'register': request.build_absolute_uri(reverse('rest_register')),
-            'user_details': request.build_absolute_uri(reverse('rest_user_details')),
+            'user': request.build_absolute_uri(reverse('rest_user_details')),
+            'password_reset': request.build_absolute_uri(reverse('rest_password_reset')),
         },
         'workouts': {
             'list': request.build_absolute_uri(reverse('workouts:workout-list')),
-            'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
+            'stats': request.build_absolute_uri(reverse('workouts:workout-statistics')),
             'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
         },
         'social': {
-            'feed': request.build_absolute_uri(reverse('social:socialfeed-list')),
-            'share_workout': request.build_absolute_uri(reverse('social:socialfeed-share_workout')),
-            'comments': request.build_absolute_uri(reverse('social:workoutcomment-list')),  # Corrected reference
-            'likes': request.build_absolute_uri(reverse('social:workoutlike-list')),
-            'follows': request.build_absolute_uri(reverse('social:userfollow-list')),
-            'toggle_follow': request.build_absolute_uri(reverse('social:userfollow-toggle-follow')),
+            'feed': request.build_absolute_uri(reverse('social:feed')),
+            'posts': request.build_absolute_uri(reverse('social:workout-post-list')),
+            'stats': request.build_absolute_uri(reverse('social:stats')),
+            'follows': request.build_absolute_uri(reverse('social:follow-list')),
+            'likes': request.build_absolute_uri(reverse('social:like-list')),
+            'comments': request.build_absolute_uri(reverse('social:comment-list')),
+            'toggle_follow': request.build_absolute_uri(reverse('social:toggle-follow')),
+            'toggle_like': request.build_absolute_uri(reverse('social:toggle-like')),
         },
-        'documentation': {
+        'profiles': request.build_absolute_uri(reverse('profile-list')),
+        'goals': request.build_absolute_uri(reverse('goal-list')),
+        'docs': {
             'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),
             'redoc': request.build_absolute_uri(reverse('schema-redoc')),
-        },
+        }
     })
