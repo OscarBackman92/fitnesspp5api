@@ -1,16 +1,12 @@
-# workouts/views.py
-from rest_framework import viewsets, permissions, filters, status
-from rest_framework.response import Response
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
 from django.db.models import Sum, Avg, Count
-from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from .models import Workout
 from .serializers import WorkoutSerializer
 from api.permissions import IsOwnerOrReadOnly
 import logging
-from dateutil.parser import parse, ParserError
 
 logger = logging.getLogger(__name__)
 
@@ -18,42 +14,43 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing workouts."""
     serializer_class = WorkoutSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    queryset = Workout.objects.all()
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['workout_type', 'date_logged', 'intensity']
 
     def get_queryset(self):
         """Return objects for the current authenticated user only."""
-        return self.queryset.filter(user=self.request.user)
+        return Workout.objects.filter(user=self.request.user).order_by('-date_logged')
 
     def perform_create(self, serializer):
         """Save the workout with the current user."""
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+        except Exception as e:
+            logger.error(f"Error creating workout: {str(e)}")
+            raise
 
     @action(detail=False, methods=['GET'])
     def statistics(self, request):
-        """Get statistics about workouts."""
+        """Get workout statistics."""
         queryset = self.get_queryset()
-        stats = {
-            'workout_types': queryset.values('workout_type').annotate(
-                count=Count('id'),
-                total_duration=Sum('duration'),
-                avg_duration=Avg('duration')
-            ),
-            'monthly_trends': queryset.annotate(
-                month=TruncMonth('date_logged')
-            ).values('month').annotate(
-                count=Count('id'),
-                total_duration=Sum('duration'),
-                avg_duration=Avg('duration')
-            ).order_by('month'),
-            'intensity_distribution': queryset.values('intensity').annotate(
-                count=Count('id'),
-                total_duration=Sum('duration')
-            ),
-            'streaks': self._calculate_streaks(queryset)
-        }
-        return Response(stats)
+        
+        try:
+            stats = {
+                'total_workouts': queryset.count(),
+                'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
+                'avg_duration': round(queryset.aggregate(Avg('duration'))['duration__avg'] or 0, 2),
+                'workout_types': queryset.values('workout_type').annotate(
+                    count=Count('id'),
+                    total_duration=Sum('duration'),
+                    avg_duration=Avg('duration')
+                ),
+                'intensity_distribution': queryset.values('intensity').annotate(count=Count('id')),
+            }
+            return Response(stats)
+        except Exception as e:
+            logger.error(f"Error getting statistics: {str(e)}")
+            return Response(
+                {'error': 'Failed to get statistics'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['GET'])
     def summary(self, request):
