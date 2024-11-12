@@ -22,10 +22,12 @@ def api_root(request):
             'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
         },
         'social': {
-            'comments': request.build_absolute_uri(reverse('workoutcomment-list')),
-            'likes': request.build_absolute_uri(reverse('workoutlike-list')),
-            'follows': request.build_absolute_uri(reverse('userfollow-list')),
-            'toggle_follow': request.build_absolute_uri(reverse('userfollow-toggle-follow')),
+            'feed': request.build_absolute_uri(reverse('social:socialfeed-list')),
+            'share_workout': request.build_absolute_uri(reverse('social:socialfeed-share_workout')),
+            'comments': request.build_absolute_uri(reverse('social:workoutcomment-list')),  # Corrected reference
+            'likes': request.build_absolute_uri(reverse('social:workoutlike-list')),
+            'follows': request.build_absolute_uri(reverse('social:userfollow-list')),
+            'toggle_follow': request.build_absolute_uri(reverse('social:userfollow-toggle-follow')),
         },
         'documentation': {
             'swagger': request.build_absolute_uri(reverse('schema-swagger-ui')),

@@ -8,7 +8,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import api_root  # Import from local views
 
-# Swagger/OpenAPI schema configuration
 schema_view = get_schema_view(
     openapi.Info(
         title="Fitness API",
@@ -32,9 +31,7 @@ urlpatterns = [
     # API endpoints
     path('api/', include([
         path('', include('api.urls')),  # API root and main endpoints
-        path('workouts/', include([
-            path('workouts/', include('workouts.urls', namespace='workouts')),
-        ])),
+        path('workouts/', include('workouts.urls', namespace='workouts')),
         path('social/', include('social.urls')),  # Social endpoints
         # Authentication endpoints
         path('auth/', include([

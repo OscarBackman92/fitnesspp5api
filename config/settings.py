@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'api',
     'workouts',
-    'social.apps.SocialConfig',
+    'social',
 ]
 
 # Updated middleware with correct order

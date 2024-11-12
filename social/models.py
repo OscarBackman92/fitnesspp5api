@@ -1,7 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from workouts.models import Workout
+from workouts.models import Workout  # Assuming the Workout model is in the 'workouts' app
+
+class WorkoutPost(models.Model):
+    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='posts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_workouts')
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Post by {self.user.username} on {self.workout}"
 
 class UserFollow(models.Model):
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
@@ -26,7 +34,7 @@ class WorkoutLike(models.Model):
         related_name='workout_likes'
     )
     workout = models.ForeignKey(
-        'workouts.Workout',  # Fixed: Properly reference the Workout model
+        'workouts.Workout',  # Properly reference the Workout model
         on_delete=models.CASCADE,
         related_name='likes'
     )
@@ -46,7 +54,7 @@ class WorkoutComment(models.Model):
         related_name='workout_comments'
     )
     workout = models.ForeignKey(
-        'workouts.Workout',  # Fixed: Properly reference the Workout model
+        'workouts.Workout',  # Properly reference the Workout model
         on_delete=models.CASCADE,
         related_name='comments'
     )

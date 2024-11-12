@@ -3,14 +3,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from .models import UserFollow, WorkoutLike, WorkoutComment
+from .models import UserFollow, WorkoutLike, WorkoutComment, WorkoutPost
+from workouts.models import Workout
 from .serializers import (
     UserFollowSerializer, 
     WorkoutLikeSerializer, 
     WorkoutCommentSerializer,
+    WorkoutPostSerializer,  # Serializer for WorkoutPost
     FeedSerializer
 )
-from workouts.models import Workout
 
 class SocialFeedViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -22,13 +23,14 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
             follower=self.request.user
         ).values_list('following', flat=True)
 
-        # Get workouts from followed users and the current user
-        return Workout.objects.filter(
+        # Get shared workouts from followed users and the current user
+        return WorkoutPost.objects.filter(
             user__in=list(following) + [self.request.user.id]
-        ).order_by('-created_at')
+        ).order_by('-shared_at')
 
     @action(detail=False, methods=['GET'])
     def feed(self, request):
+        """ Return a paginated list of shared workouts from followed users. """
         page = int(request.query_params.get('page', 1))
         limit = int(request.query_params.get('limit', 10))
         start = (page - 1) * limit
@@ -43,9 +45,30 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
             'count': self.get_queryset().count()
         })
 
+    @action(detail=False, methods=['POST'])
+    def share_workout(self, request):
+        """ Share a workout to the social feed """
+        workout_id = request.data.get('workout_id')
+        workout = get_object_or_404(Workout, id=workout_id)
+
+        # Check if the user already shared this workout
+        if WorkoutPost.objects.filter(workout=workout, user=request.user).exists():
+            return Response(
+                {'error': 'You have already shared this workout.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create a new WorkoutPost
+        workout_post = WorkoutPost.objects.create(
+            workout=workout,
+            user=request.user
+        )
+
+        serializer = WorkoutPostSerializer(workout_post)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 class UserFollowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UserFollowSerializer
 
     def get_queryset(self):
         return UserFollow.objects.filter(follower=self.request.user)
@@ -69,7 +92,7 @@ class UserFollowViewSet(viewsets.ModelViewSet):
             follow.delete()
             return Response({'status': 'unfollowed'})
 
-        serializer = self.get_serializer(follow)
+        serializer = UserFollowSerializer(follow)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class WorkoutLikeViewSet(viewsets.ModelViewSet):
@@ -81,10 +104,11 @@ class WorkoutLikeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def toggle(self, request):
-        workout = get_object_or_404(Workout, id=request.data.get('workout_id'))
+        workout_post_id = request.data.get('workout_post_id')
+        workout_post = get_object_or_404(WorkoutPost, id=workout_post_id)
         like, created = WorkoutLike.objects.get_or_create(
             user=request.user,
-            workout=workout
+            workout_post=workout_post
         )
 
         if not created:
@@ -99,11 +123,8 @@ class WorkoutCommentViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutCommentSerializer
 
     def get_queryset(self):
-        workout_id = self.request.query_params.get('workout_id')
+        workout_post_id = self.request.query_params.get('workout_post_id')
         queryset = WorkoutComment.objects.all()
-        if workout_id:
-            queryset = queryset.filter(workout_id=workout_id)
+        if workout_post_id:
+            queryset = queryset.filter(workout_post_id=workout_post_id)
         return queryset.order_by('-created_at')
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
