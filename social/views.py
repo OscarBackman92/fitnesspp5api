@@ -15,12 +15,9 @@ from .serializers import (
 )
 from workouts.models import Workout
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 
 class SocialFeedViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for handling social feed operations including sharing workouts,
-    liking posts, and retrieving personalized feed content.
-    """
     serializer_class = WorkoutPostSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -30,10 +27,9 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Get posts from followed users and self
-        Includes options for filtering by timeframe and workout type
+        Get posts from followed users and self.
+        Includes options for filtering by timeframe and workout type.
         """
-        # Get base queryset of followed users and self
         following = UserFollow.objects.filter(
             follower=self.request.user
         ).values_list('following', flat=True)
@@ -46,7 +42,6 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
             'user__profile'
         )
 
-        # Apply filters from query parameters
         timeframe = self.request.query_params.get('timeframe')
         if timeframe:
             if timeframe == 'today':
@@ -74,18 +69,16 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def share_workout(self, request):
-        """Share a workout to the social feed"""
+        """Share a workout to the social feed."""
         workout_id = request.data.get('workout_id')
         workout = get_object_or_404(Workout, id=workout_id)
 
-        # Verify workout belongs to user
         if workout.user != request.user:
             return Response(
                 {'error': 'You can only share your own workouts'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Check if already shared
         if WorkoutPost.objects.filter(workout=workout, user=request.user).exists():
             return Response(
                 {'error': 'You have already shared this workout'},
@@ -102,7 +95,7 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'])
     def toggle_like(self, request, pk=None):
-        """Toggle like status for a workout post"""
+        """Toggle like status for a workout post."""
         post = self.get_object()
         like, created = WorkoutLike.objects.get_or_create(
             user=request.user,
@@ -117,7 +110,7 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def trending(self, request):
-        """Get trending posts based on likes and comments in the last week"""
+        """Get trending posts based on likes and comments in the last week."""
         week_ago = timezone.now() - timedelta(days=7)
         trending_posts = self.get_queryset().filter(
             shared_at__gte=week_ago
@@ -128,10 +121,8 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(trending_posts, many=True)
         return Response(serializer.data)
 
+
 class WorkoutCommentViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for handling workout comments with filtering and ordering capabilities
-    """
     serializer_class = WorkoutCommentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.OrderingFilter]
@@ -147,16 +138,12 @@ class WorkoutCommentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
     def perform_destroy(self, instance):
-        """Only allow users to delete their own comments"""
+        """Only allow users to delete their own comments."""
         if instance.user != self.request.user:
             raise permissions.PermissionDenied("You can only delete your own comments.")
         instance.delete()
 
 class UserFollowViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing user follows including follow/unfollow actions
-    and retrieving followers/following lists
-    """
     serializer_class = UserFollowSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -168,13 +155,12 @@ class UserFollowViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def toggle_follow(self, request):
-        """Toggle follow status for a user"""
+        """Toggle follow status for a user."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         user_to_follow = serializer.validated_data['following_id']
         
-        # Prevent self-following
         if user_to_follow == request.user.id:
             return Response(
                 {'error': 'You cannot follow yourself'},
@@ -195,13 +181,11 @@ class UserFollowViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def suggestions(self, request):
-        """Get user suggestions for following based on various factors"""
-        # Get users that the current user isn't following
+        """Get user suggestions for following based on various factors."""
         following = UserFollow.objects.filter(
             follower=request.user
         ).values_list('following', flat=True)
         
-        # Get users with similar workout types
         user_workout_types = Workout.objects.filter(
             user=request.user
         ).values_list('workout_type', flat=True).distinct()
@@ -224,7 +208,7 @@ class UserFollowViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def stats(self, request):
-        """Get social statistics for the current user"""
+        """Get social statistics for the current user."""
         followers_count = UserFollow.objects.filter(following=request.user).count()
         following_count = UserFollow.objects.filter(follower=request.user).count()
         posts_count = WorkoutPost.objects.filter(user=request.user).count()
@@ -243,3 +227,44 @@ class UserFollowViewSet(viewsets.ModelViewSet):
                 context={'request': request}
             ).data
         })
+
+class WorkoutPostViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing workout posts in the social feed.
+    Supports listing, creating, retrieving, updating, and deleting posts.
+    """
+    queryset = WorkoutPost.objects.all()
+    serializer_class = WorkoutPostSerializer
+    permission_classes = [IsAuthenticated] 
+
+    def perform_create(self, serializer):
+        """Override to assign the current user to the post."""
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['POST'])
+    def toggle_like(self, request, pk=None):
+        """Toggle like status for a workout post."""
+        post = self.get_object()
+        like, created = WorkoutLike.objects.get_or_create(
+            user=request.user,
+            workout=post.workout
+        )
+
+        if not created:
+            like.delete()
+            return Response({'status': 'unliked'})
+
+        return Response({'status': 'liked'})
+
+    @action(detail=False, methods=['GET'])
+    def trending(self, request):
+        """Get trending posts based on likes and comments in the last week."""
+        week_ago = timezone.now() - timedelta(days=7)
+        trending_posts = self.get_queryset().filter(
+            shared_at__gte=week_ago
+        ).annotate(
+            engagement=Count('workout__likes') + Count('workout__comments')
+        ).order_by('-engagement')[:5]
+
+        serializer = self.get_serializer(trending_posts, many=True)
+        return Response(serializer.data)

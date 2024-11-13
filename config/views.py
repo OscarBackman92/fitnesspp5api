@@ -21,8 +21,8 @@ def api_root(request):
             'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
         },
         'social': {
-            'feed': request.build_absolute_uri(reverse('social:feed')),
-            'posts': request.build_absolute_uri(reverse('social:workout-post-list')),
+            'feed': request.build_absolute_uri(reverse('social:social-feed-list')),
+            'posts': request.build_absolute_uri(reverse('social:workout-post-list')),  # Correct URL name
             'stats': request.build_absolute_uri(reverse('social:stats')),
             'follows': request.build_absolute_uri(reverse('social:follow-list')),
             'likes': request.build_absolute_uri(reverse('social:like-list')),
