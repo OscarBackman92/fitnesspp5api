@@ -1,68 +1,83 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserFollow, WorkoutLike, WorkoutComment, WorkoutPost
+from .models import WorkoutPost, WorkoutLike, WorkoutComment, UserFollow
 from workouts.serializers import WorkoutSerializer
 
-class UserFollowSerializer(serializers.ModelSerializer):
-    follower_username = serializers.CharField(source='follower.username', read_only=True)
-    following_username = serializers.CharField(source='following.username', read_only=True)
+class UserProfileSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
-        model = UserFollow
-        fields = ['id', 'follower', 'following', 'follower_username', 
-                 'following_username', 'created_at']
-        read_only_fields = ['follower']
+        model = User
+        fields = ['id', 'username', 'profile_image', 'is_following']
+
+    def get_profile_image(self, obj):
+        if hasattr(obj, 'profile') and obj.profile.profile_image:
+            return obj.profile.profile_image.url
+        return None
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return UserFollow.objects.filter(
+                follower=request.user,
+                following=obj
+            ).exists()
+        return False
 
 class WorkoutPostSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()
+    user = UserProfileSerializer(read_only=True)
     workout = WorkoutSerializer(read_only=True)
-    likes_count = serializers.IntegerField(source='likes.count', read_only=True)
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)
+    workout_id = serializers.IntegerField(write_only=True)
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     has_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkoutPost
-        fields = ['id', 'user', 'workout', 'caption', 'shared_at', 
-                 'likes_count', 'comments_count', 'has_liked']
+        fields = [
+            'id', 'user', 'workout', 'workout_id',
+            'shared_at', 'likes_count', 'comments_count', 'has_liked'
+        ]
+
+    def get_likes_count(self, obj):
+        return WorkoutLike.objects.filter(workout=obj.workout).count()
+
+    def get_comments_count(self, obj):
+        return WorkoutComment.objects.filter(workout=obj.workout).count()
 
     def get_has_liked(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return WorkoutLike.objects.filter(
-                user=request.user,
-                workout_post=obj
+                workout=obj.workout,
+                user=request.user
             ).exists()
         return False
 
-class WorkoutLikeSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
-
-    class Meta:
-        model = WorkoutLike
-        fields = ['id', 'user', 'workout_post', 'created_at']
-        read_only_fields = ['user']
-
 class WorkoutCommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    user = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = WorkoutComment
-        fields = ['id', 'user', 'workout_post', 'content', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'workout', 'content', 'created_at']
         read_only_fields = ['user']
 
-class FeedSerializer(WorkoutPostSerializer):
-    """Extended serializer for feed items with additional engagement data"""
-    engagement_rate = serializers.SerializerMethodField()
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
-    class Meta(WorkoutPostSerializer.Meta):
-        fields = WorkoutPostSerializer.Meta.fields + ['engagement_rate']
+class UserFollowSerializer(serializers.ModelSerializer):
+    follower = UserProfileSerializer(read_only=True)
+    following = UserProfileSerializer(read_only=True)
+    following_id = serializers.IntegerField(write_only=True)
 
-    def get_engagement_rate(self, obj):
-        likes = obj.likes.count()
-        comments = obj.comments.count()
-        total_engagement = likes + comments
-        try:
-            rate = (total_engagement / obj.user.shared_workouts.count()) * 100
-            return round(rate, 2)
-        except ZeroDivisionError:
-            return 0.0
+    class Meta:
+        model = UserFollow
+        fields = ['id', 'follower', 'following', 'following_id', 'created_at']
+
+    def validate_following_id(self, value):
+        request = self.context.get('request')
+        if request.user.id == value:
+            raise serializers.ValidationError("You cannot follow yourself.")
+        return value
