@@ -4,16 +4,15 @@ from django.core.exceptions import ValidationError
 from workouts.models import Workout
 
 class WorkoutPost(models.Model):
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='workout_posts')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_posts')
-    caption = models.TextField(blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_workouts')
+    workout = models.ForeignKey('workouts.Workout', on_delete=models.CASCADE, related_name='posts')
     shared_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-shared_at']
 
     def __str__(self):
-        return f"{self.user.username}'s post of {self.workout}"
+        return f"{self.user.username}'s post - {self.workout}"
 
 class UserFollow(models.Model):
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)

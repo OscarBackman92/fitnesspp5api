@@ -17,9 +17,11 @@ from workouts.models import Workout
 class SocialFeedViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutPostSerializer
     permission_classes = [permissions.IsAuthenticated]
-    ordering = ['-shared_at']
 
     def get_queryset(self):
+        """
+        Get posts from followed users and self
+        """
         following = UserFollow.objects.filter(
             follower=self.request.user
         ).values_list('following', flat=True)
@@ -28,49 +30,37 @@ class SocialFeedViewSet(viewsets.ModelViewSet):
             Q(user=self.request.user) | Q(user__in=following)
         ).select_related('user', 'workout', 'user__profile')
 
-        # Apply timeframe filter if provided
+        # Handle timeframe filter
         timeframe = self.request.query_params.get('timeframe')
-        if timeframe == 'today':
-            queryset = queryset.filter(shared_at__date=timezone.now().date())
-        elif timeframe == 'week':
-            queryset = queryset.filter(shared_at__gte=timezone.now() - timedelta(days=7))
-        elif timeframe == 'month':
-            queryset = queryset.filter(shared_at__gte=timezone.now() - timedelta(days=30))
+        if timeframe and timeframe != 'all':
+            if timeframe == 'today':
+                queryset = queryset.filter(shared_at__date=timezone.now().date())
+            elif timeframe == 'week':
+                queryset = queryset.filter(
+                    shared_at__gte=timezone.now() - timedelta(days=7)
+                )
+            elif timeframe == 'month':
+                queryset = queryset.filter(
+                    shared_at__gte=timezone.now() - timedelta(days=30)
+                )
 
-        return queryset.annotate(
-            likes_count=Count('workout__likes'),
-            comments_count=Count('workout__comments')
-        )
+        # Handle workout type filter
+        workout_type = self.request.query_params.get('workout_type')
+        if workout_type:
+            queryset = queryset.filter(workout__workout_type=workout_type)
 
-    @action(detail=False, methods=['POST'])
-    def share_workout(self, request):
-        workout = get_object_or_404(Workout, id=request.data.get('workout_id'))
+        return queryset
 
-        if workout.user != request.user:
+    def list(self, request, *args, **kwargs):
+        """Override list to add error handling"""
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in SocialFeedViewSet.list: {str(e)}")
             return Response(
-                {'error': 'You can only share your own workouts'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Failed to fetch feed"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-        if WorkoutPost.objects.filter(workout=workout, user=request.user).exists():
-            return Response(
-                {'error': 'You have already shared this workout'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        post = WorkoutPost.objects.create(workout=workout, user=request.user)
-        return Response(self.get_serializer(post).data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=['POST'])
-    def toggle_like(self, request, pk=None):
-        post = self.get_object()
-        like, created = WorkoutLike.objects.get_or_create(
-            user=request.user,
-            workout=post.workout
-        )
-        if not created:
-            like.delete()
-        return Response({'status': 'liked' if created else 'unliked'})
 
 class WorkoutCommentViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutCommentSerializer
