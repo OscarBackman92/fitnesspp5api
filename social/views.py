@@ -29,14 +29,12 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
 
         workout = get_object_or_404(Workout, id=workout_id)
         
-        # Check if user owns the workout
         if workout.user != request.user:
             return Response(
                 {'error': 'Permission denied'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Create the workout post
         post = WorkoutPost.objects.create(
             user=request.user,
             workout=workout
@@ -68,7 +66,6 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
             serializer = CommentSerializer(comments, many=True)
             return Response(serializer.data)
 
-        # POST request - create comment
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, post=post)

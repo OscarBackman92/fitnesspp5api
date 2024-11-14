@@ -45,9 +45,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 )
                 return url
             except Exception as e:
-                return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
-        return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
-
+                return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
+        return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""

@@ -28,7 +28,7 @@ class UserRegistrationView(generics.CreateAPIView):
         if serializer.is_valid():
             try:
                 user = serializer.save()
-                UserProfile.objects.create(user=user)  # Automatically create UserProfile for the new user
+                UserProfile.objects.create(user=user)
                 return Response({
                     "user": UserRegistrationSerializer(user, context=self.get_serializer_context()).data,
                     "message": "User Created Successfully"
@@ -62,7 +62,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         
         stats = {
             'total_workouts': profile.user.workouts.count(),
-            'workouts_count': profile.workouts_count,  # Using the annotated count
+            'workouts_count': profile.workouts_count,
         }
         return Response(stats)
 
@@ -119,7 +119,7 @@ class GoalViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user_profile=self.request.user.profile)  # Adjust based on your UserProfile
+        serializer.save(user_profile=self.request.user.profile)
 
     @action(detail=True, methods=['POST'])
     def toggle_completion(self, request, pk=None):

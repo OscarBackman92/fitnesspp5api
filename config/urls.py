@@ -24,11 +24,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     # Root endpoint redirects to API root
     path('', api_root, name='api-root'),
-    
-    # Admin site
     path('admin/', admin.site.urls),
-
-    # API endpoints
     path('api/', include([
         path('', include('api.urls')),  # API root and main endpoints
         path('workouts/', include('workouts.urls', namespace='workouts')),

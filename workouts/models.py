@@ -5,7 +5,6 @@ from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
 class Workout(models.Model):
-    # Workout types as class constants
     CARDIO = 'cardio'
     STRENGTH = 'strength'
     FLEXIBILITY = 'flexibility'
@@ -20,7 +19,6 @@ class Workout(models.Model):
         (OTHER, 'Other'),
     ]
 
-    # Intensity levels as class constants
     LOW = 'low'
     MODERATE = 'moderate'
     HIGH = 'high'
@@ -39,7 +37,7 @@ class Workout(models.Model):
     workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES)
     date_logged = models.DateField(default=timezone.now)
     duration = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(1440)],  # max 24 hours
+        validators=[MinValueValidator(1), MaxValueValidator(1440)],
         help_text="Duration in minutes"
     )
     notes = models.TextField(blank=True)

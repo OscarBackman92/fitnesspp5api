@@ -1,5 +1,3 @@
-# api/middleware.py
-
 import time
 from typing import Callable
 from django.http import HttpRequest, HttpResponse
