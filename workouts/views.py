@@ -6,6 +6,9 @@ from django.utils import timezone
 from .models import Workout
 from .serializers import WorkoutSerializer
 from api.permissions import IsOwnerOrReadOnly
+from django.db.models.functions import TruncDate
+
+from datetime import timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,107 +22,82 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         """Return objects for the current authenticated user only."""
         return Workout.objects.filter(user=self.request.user).order_by('-date_logged')
 
-    def perform_create(self, serializer):
-        """Save the workout with the current user."""
-        try:
-            serializer.save(user=self.request.user)
-        except Exception as e:
-            logger.error(f"Error creating workout: {str(e)}")
-            raise
-
     @action(detail=False, methods=['GET'])
     def statistics(self, request):
         """Get workout statistics."""
         queryset = self.get_queryset()
+        today = timezone.now().date()
         
         try:
-            stats = {
-                'total_workouts': queryset.count(),
-                'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
-                'avg_duration': round(queryset.aggregate(Avg('duration'))['duration__avg'] or 0, 2),
-                'workout_types': queryset.values('workout_type').annotate(
+            # Get this week's workouts
+            week_start = today - timedelta(days=today.weekday())
+            workouts_this_week = queryset.filter(
+                date_logged__gte=week_start,
+                date_logged__lte=today
+            ).count()
+
+            # Calculate current streak
+            workouts_by_date = queryset.annotate(
+                workout_date=TruncDate('date_logged')
+            ).values('workout_date').distinct().order_by('-workout_date')
+
+            current_streak = 0
+            check_date = today
+
+            # Start checking from yesterday if no workout today
+            if not workouts_by_date.filter(workout_date=today).exists():
+                check_date = today - timedelta(days=1)
+
+            # Count consecutive days
+            while workouts_by_date.filter(workout_date=check_date).exists():
+                current_streak += 1
+                check_date = check_date - timedelta(days=1)
+
+            # Calculate other statistics
+            workout_types = (
+                queryset.values('workout_type')
+                .annotate(
                     count=Count('id'),
                     total_duration=Sum('duration'),
                     avg_duration=Avg('duration')
-                ),
-                'intensity_distribution': queryset.values('intensity').annotate(count=Count('id')),
+                )
+                .order_by('-count')
+            )
+
+            intensity_distribution = (
+                queryset.values('intensity')
+                .annotate(count=Count('id'))
+                .order_by('intensity')
+            )
+
+            # Get monthly trends
+            monthly_trends = (
+                queryset.extra(select={'month': "DATE_TRUNC('month', date_logged)"})
+                .values('month')
+                .annotate(
+                    workouts=Count('id'),
+                    total_duration=Sum('duration')
+                )
+                .order_by('-month')[:12]
+            )
+
+            stats = {
+                'total_workouts': queryset.count(),
+                'workouts_this_week': workouts_this_week,
+                'current_streak': current_streak,
+                'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
+                'avg_duration': round(queryset.aggregate(Avg('duration'))['duration__avg'] or 0, 2),
+                'workout_types': workout_types,
+                'intensity_distribution': intensity_distribution,
+                'monthly_trends': monthly_trends,
+                'last_updated': timezone.now().isoformat()
             }
+
             return Response(stats)
+            
         except Exception as e:
             logger.error(f"Error getting statistics: {str(e)}")
             return Response(
                 {'error': 'Failed to get statistics'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    @action(detail=False, methods=['GET'])
-    def summary(self, request):
-        """Get a summary of workout data."""
-        queryset = self.get_queryset()
-        total_workouts = queryset.count()
-        stats = queryset.aggregate(
-            total_duration=Sum('duration'),
-            avg_duration=Avg('duration')
-        )
-        
-        return Response({
-            'total_workouts': total_workouts,
-            'total_duration': stats['total_duration'] or 0,
-            'avg_duration': round(stats['avg_duration'] or 0, 2),
-            'recent_workouts': WorkoutSerializer(
-                queryset.order_by('-date_logged')[:5],
-                many=True
-            ).data
-        })
-
-    def _calculate_streaks(self, queryset):
-        """Calculate workout streaks with proper handling of current day."""
-        from datetime import datetime, timedelta
-        
-        dates = list(
-            queryset.order_by('date_logged')
-            .values_list('date_logged', flat=True)
-            .distinct()
-        )
-        
-        if not dates:
-            return {
-                'current_streak': 0,
-                'longest_streak': 0,
-                'total_active_days': 0
-            }
-
-        workout_dates = set(date.isoformat() for date in dates)
-        
-        today = timezone.now().date()
-        current_streak = 0
-        check_date = today
-        
-        while check_date.isoformat() in workout_dates or (
-            check_date == today and
-            (check_date - timedelta(days=1)).isoformat() in workout_dates
-        ):
-            if check_date.isoformat() in workout_dates:
-                current_streak += 1
-            check_date = check_date - timedelta(days=1)
-
-        longest_streak = 0
-        current_count = 0
-        dates_sorted = sorted(dates)
-        
-        for i in range(len(dates_sorted)):
-            if i == 0 or (dates_sorted[i] - dates_sorted[i-1]).days == 1:
-                current_count += 1
-            else:
-                longest_streak = max(longest_streak, current_count)
-                current_count = 1
-        
-        longest_streak = max(longest_streak, current_count)
-
-        return {
-            'current_streak': current_streak,
-            'longest_streak': longest_streak,
-            'first_workout': dates_sorted[0].isoformat(),
-            'last_workout': dates_sorted[-1].isoformat(),
-            'total_active_days': len(dates)
-        }
