@@ -7,17 +7,15 @@ from corsheaders.defaults import default_headers
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
 # Update ALLOWED_HOSTS to include both development and production hosts
-ALLOWED_HOSTS = ['http://localhost:3000', '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
+ALLOWED_HOSTS = ['http://localhost:3000',
+                '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -96,7 +94,6 @@ INSTALLED_APPS = [
     'social',
 ]
 
-# Updated middleware with correct order
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.common.CommonMiddleware',
@@ -113,7 +110,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-# Database configuration
 if 'test' not in sys.argv and 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
@@ -131,7 +127,6 @@ else:
         }
     }
 
-# Templates configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -157,7 +152,6 @@ TEMPLATES = [
     },
 ]
 
-# Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
@@ -165,16 +159,14 @@ os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 WHITENOISE_MAX_AGE = 31536000
 
-# Media files configuration
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Cloudinary configuration
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
     'CLOUDINARY_API_PROXY': None,
-    'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg'],
+    'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg' 'webp', 'bmp', 'ico'],
     'MAGIC_FILE_PATH': None,
     'INVALID_VIDEO_ERROR_MESSAGE': '',
     'TIMEOUT': 30,
@@ -203,7 +195,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# Swagger settings
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -218,7 +209,6 @@ SWAGGER_SETTINGS = {
     'REFETCH_SCHEMA_ON_LOGOUT': True,
 }
 
-# Security settings
 if DEBUG:
     SECURE_SSL_REDIRECT = False
     CSRF_COOKIE_SECURE = False
@@ -234,7 +224,6 @@ else:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-# Authentication settings
 REST_AUTH = {
     'USE_JWT': False,
     'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
@@ -242,7 +231,6 @@ REST_AUTH = {
 
 SITE_ID = 1
 
-# Cache settings
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -258,19 +246,17 @@ CACHES = {
             'RETRY_ON_TIMEOUT': True,
         },
         'KEY_PREFIX': 'fitness_app',
-        'TIMEOUT': 300,  # 5 minutes default timeout
+        'TIMEOUT': 300,
     }
 }
 
 CACHE_TTL = 60 * 15
 
-# Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = False
 
-# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -310,7 +296,6 @@ else:
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-# dj-rest-auth settings
 REST_AUTH = {
     'USE_JWT': False,
     'JWT_AUTH_COOKIE': None,
@@ -321,7 +306,7 @@ REST_AUTH = {
     'LOGIN_VERIFICATION_ENABLED': False,
 }
 
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Options: 'mandatory', 'optional', or 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
@@ -331,7 +316,6 @@ if DEBUG:
     INTERNAL_IPS = ['127.0.0.1']
 
 
-# Debug settings
 if DEBUG:
     print(f"DEBUG mode is: {DEBUG}")
     CORS_ALLOW_ALL_ORIGINS = True

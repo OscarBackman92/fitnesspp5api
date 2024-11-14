@@ -70,7 +70,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     def upload_image(self, request, pk=None):
         """Upload profile image endpoint."""
         profile = self.get_object()
-        
+
+        if request.user != profile.user:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
         if 'profile_image' not in request.FILES:
             return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 

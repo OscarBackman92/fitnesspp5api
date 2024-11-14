@@ -12,7 +12,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
     workouts_count = serializers.IntegerField(read_only=True)
-    goals = serializers.SerializerMethodField()  # This will fetch goals correctly
+    goals = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -37,16 +37,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 url, options = cloudinary_url(
                     str(obj.profile_image),
                     format='webp',
-                    transformation=[
-                        {'width': 200, 'height': 200, 'crop': 'fill', 'gravity': 'face'},
-                        {'quality': 'auto:eco'},
-                        {'fetch_format': 'auto'}
-                    ]
+                    transformation=[{'width': 200, 'height': 200, 'crop': 'fill', 'gravity': 'face'}, 
+                                    {'quality': 'auto:eco'}, 
+                                    {'fetch_format': 'auto'}]
                 )
                 return url
             except Exception as e:
-                return None
-        return None
+                logger.error(f"Cloudinary image URL generation failed: {e}")
+                return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
+        return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
+
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""
