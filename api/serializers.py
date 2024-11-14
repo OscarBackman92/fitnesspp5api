@@ -5,6 +5,8 @@ from django.db import IntegrityError
 from cloudinary.utils import cloudinary_url
 from django.utils import timezone
 
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
