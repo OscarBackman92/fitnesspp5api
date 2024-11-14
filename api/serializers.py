@@ -45,7 +45,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 )
                 return url
             except Exception as e:
-                logger.error(f"Cloudinary image URL generation failed: {e}")
                 return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
         return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'  # Default image URL
 

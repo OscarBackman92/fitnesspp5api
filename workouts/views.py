@@ -72,35 +72,54 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             ).data
         })
 
-    def _calculate_streaks(self, queryset):
-        """Calculate workout streaks."""
-        dates = list(
-            queryset.order_by('date_logged')
-            .values_list('date_logged', flat=True)
-            .distinct()
-        )
-        
-        if not dates:
-            return {'current_streak': 0, 'longest_streak': 0}
-
-        current_streak = 1
-        longest_streak = 1
-        current_count = 1
-
-        for i in range(len(dates) - 1):
-            if (dates[i + 1] - dates[i]).days == 1:
-                current_count += 1
-                current_streak = max(current_streak, current_count)
-            else:
-                longest_streak = max(longest_streak, current_count)
-                current_count = 1
-
-        longest_streak = max(longest_streak, current_count)
-
+def _calculate_streaks(self, queryset):
+    """Calculate workout streaks with proper handling of current day."""
+    from datetime import datetime, timedelta
+    
+    dates = list(
+        queryset.order_by('date_logged')
+        .values_list('date_logged', flat=True)
+        .distinct()
+    )
+    
+    if not dates:
         return {
-            'current_streak': current_streak,
-            'longest_streak': longest_streak,
-            'first_workout': dates[0].isoformat(),
-            'last_workout': dates[-1].isoformat(),
-            'total_active_days': len(dates)
+            'current_streak': 0,
+            'longest_streak': 0,
+            'total_active_days': 0
         }
+
+    workout_dates = set(date.isoformat() for date in dates)
+    
+    today = timezone.now().date()
+    current_streak = 0
+    check_date = today
+    
+    while check_date.isoformat() in workout_dates or (
+        check_date == today and
+        (check_date - timedelta(days=1)).isoformat() in workout_dates
+    ):
+        if check_date.isoformat() in workout_dates:
+            current_streak += 1
+        check_date = check_date - timedelta(days=1)
+
+    longest_streak = 0
+    current_count = 0
+    dates_sorted = sorted(dates)
+    
+    for i in range(len(dates_sorted)):
+        if i == 0 or (dates_sorted[i] - dates_sorted[i-1]).days == 1:
+            current_count += 1
+        else:
+            longest_streak = max(longest_streak, current_count)
+            current_count = 1
+    
+    longest_streak = max(longest_streak, current_count)
+
+    return {
+        'current_streak': current_streak,
+        'longest_streak': longest_streak,
+        'first_workout': dates_sorted[0].isoformat(),
+        'last_workout': dates_sorted[-1].isoformat(),
+        'total_active_days': len(dates)
+    }
