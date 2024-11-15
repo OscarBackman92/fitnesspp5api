@@ -14,6 +14,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     name = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
     weight = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)])
     height = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)])
     profile_image = CloudinaryField('image', folder='profile_images', default='default_profile_ylwpgw')
