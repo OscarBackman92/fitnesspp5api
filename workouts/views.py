@@ -22,6 +22,10 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         """Return objects for the current authenticated user only."""
         return Workout.objects.filter(user=self.request.user).order_by('-date_logged')
 
+    def perform_create(self, serializer):
+        """Save the workout with the current user."""
+        serializer.save(user=self.request.user) 
+
     @action(detail=False, methods=['GET'])
     def statistics(self, request):
         """Get workout statistics."""
@@ -29,14 +33,11 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
         
         try:
-            # Get this week's workouts
             week_start = today - timedelta(days=today.weekday())
             workouts_this_week = queryset.filter(
                 date_logged__gte=week_start,
                 date_logged__lte=today
             ).count()
-
-            # Calculate current streak
             workouts_by_date = queryset.annotate(
                 workout_date=TruncDate('date_logged')
             ).values('workout_date').distinct().order_by('-workout_date')
@@ -44,16 +45,13 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             current_streak = 0
             check_date = today
 
-            # Start checking from yesterday if no workout today
             if not workouts_by_date.filter(workout_date=today).exists():
                 check_date = today - timedelta(days=1)
 
-            # Count consecutive days
             while workouts_by_date.filter(workout_date=check_date).exists():
                 current_streak += 1
                 check_date = check_date - timedelta(days=1)
 
-            # Calculate other statistics
             workout_types = (
                 queryset.values('workout_type')
                 .annotate(
@@ -70,7 +68,6 @@ class WorkoutViewSet(viewsets.ModelViewSet):
                 .order_by('intensity')
             )
 
-            # Get monthly trends
             monthly_trends = (
                 queryset.extra(select={'month': "DATE_TRUNC('month', date_logged)"})
                 .values('month')
