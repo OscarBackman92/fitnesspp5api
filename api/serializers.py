@@ -19,15 +19,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'id', 'username', 'email', 'name', 'weight', 'height',
+            'id', 'username', 'email', 'name', 'bio', 'weight', 'height',
             'profile_image', 'date_of_birth', 'created_at', 
             'updated_at', 'gender', 'is_owner', 'workouts_count', 'goals', 'age'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
+    
+    def validate_bio(self, value):
+        """
+        Validate bio field:
+        - Maximum length of 500 characters
+        - No HTML tags allowed
+        - Strip whitespace
+        """
+        from django.utils.html import strip_tags
+        value = strip_tags(value)
+        
+        value = value.strip()
+        
+        if len(value) > 500:
+            raise serializers.ValidationError(
+                'Bio cannot exceed 500 characters'
+            )
+            
+        return value
 
     def get_goals(self, obj):
         """Get user's goals from the UserProfile."""
-        return GoalSerializer(obj.goals.all(), many=True).data  # Change here
+        return GoalSerializer(obj.goals.all(), many=True).data
 
     def get_is_owner(self, obj):
         request = self.context.get('request')
