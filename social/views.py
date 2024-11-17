@@ -11,6 +11,7 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Return the WorkoutPosts with related 'user' and 'workout'."""
         return WorkoutPost.objects.select_related(
             'user',
             'workout'
@@ -28,7 +29,7 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
             )
 
         workout = get_object_or_404(Workout, id=workout_id)
-        
+
         if workout.user != request.user:
             return Response(
                 {'error': 'Permission denied'},
@@ -72,12 +73,15 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Return comments belonging to the authenticated user."""
         return Comment.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        """Automatically assign the authenticated user to the comment."""
         serializer.save(user=self.request.user)
