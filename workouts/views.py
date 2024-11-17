@@ -19,12 +19,33 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        """Return objects for the current authenticated user only."""
-        return Workout.objects.filter(user=self.request.user).order_by('-date_logged')
+        """Return objects for the current authenticated user or filtered by user_id."""
+        user_id = self.request.query_params.get('user_id')
+        queryset = Workout.objects.all()
+        
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        else:
+            queryset = queryset.filter(user=self.request.user)
+            
+        return queryset.order_by('-date_logged')
 
     def perform_create(self, serializer):
         """Save the workout with the current user."""
-        serializer.save(user=self.request.user) 
+        serializer.save(user=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        """Custom delete to handle errors gracefully."""
+        try:
+            workout = self.get_object()
+            workout.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error deleting workout: {str(e)}")
+            return Response(
+                {'error': 'Failed to delete workout'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['GET'])
     def statistics(self, request):
@@ -96,5 +117,53 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             logger.error(f"Error getting statistics: {str(e)}")
             return Response(
                 {'error': 'Failed to get statistics'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['GET'])
+    def summary(self, request):
+        """Get workout summary with recent activity."""
+        queryset = self.get_queryset()
+        
+        try:
+            recent_workouts = queryset.order_by('-date_logged')[:5]
+            
+            summary = {
+                'recent_workouts': WorkoutSerializer(recent_workouts, many=True).data,
+                'total_workouts': queryset.count(),
+                'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
+                'favorite_type': (
+                    queryset.values('workout_type')
+                    .annotate(count=Count('id'))
+                    .order_by('-count')
+                    .first()
+                ),
+                'last_workout': WorkoutSerializer(
+                    queryset.first()
+                ).data if queryset.exists() else None
+            }
+            
+            return Response(summary)
+            
+        except Exception as e:
+            logger.error(f"Error getting workout summary: {str(e)}")
+            return Response(
+                {'error': 'Failed to get workout summary'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['GET'])
+    def types(self, request):
+        """Get available workout types."""
+        try:
+            workout_types = [
+                {'value': choice[0], 'label': choice[1]} 
+                for choice in Workout.WORKOUT_TYPES
+            ]
+            return Response(workout_types)
+        except Exception as e:
+            logger.error(f"Error getting workout types: {str(e)}")
+            return Response(
+                {'error': 'Failed to get workout types'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
