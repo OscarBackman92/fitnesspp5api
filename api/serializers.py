@@ -5,8 +5,6 @@ from django.db import IntegrityError
 from cloudinary.utils import cloudinary_url
 from django.utils import timezone
 
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
@@ -26,21 +24,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'created_at', 'updated_at']
     
     def validate_bio(self, value):
-        """
-        Validate bio field:
-        - Maximum length of 500 characters
-        - No HTML tags allowed
-        - Strip whitespace
-        """
         from django.utils.html import strip_tags
-        value = strip_tags(value)
-        
-        value = value.strip()
+        value = strip_tags(value).strip()
         
         if len(value) > 500:
-            raise serializers.ValidationError(
-                'Bio cannot exceed 500 characters'
-            )
+            raise serializers.ValidationError('Bio cannot exceed 500 characters')
             
         return value
 
@@ -63,7 +51,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                                     {'fetch_format': 'auto'}]
                 )
                 return url
-            except Exception as e:
+            except Exception:
                 return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
         return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
 
@@ -79,14 +67,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def validate_profile_image(self, value):
         if value:
             if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError(
-                    'Image size cannot exceed 2MB'
-                )
+                raise serializers.ValidationError('Image size cannot exceed 2MB')
             allowed_types = ['image/jpeg', 'image/png', 'image/webp']
             if hasattr(value, 'content_type') and value.content_type not in allowed_types:
-                raise serializers.ValidationError(
-                    'Only JPEG, PNG and WebP images are allowed'
-                )
+                raise serializers.ValidationError('Only JPEG, PNG and WebP images are allowed')
         return value
 
 class GoalSerializer(serializers.ModelSerializer):
@@ -119,47 +103,6 @@ class GoalSerializer(serializers.ModelSerializer):
         """Calculate the goal progress."""
         return obj.calculate_progress()
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(write_only=True)
-    email = serializers.EmailField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password', 'password2')
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def validate(self, data):
-        if data['password'] != data['password2']:
-            raise serializers.ValidationError({
-                "password": "Passwords don't match"
-            })
-        return data
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "A user with that email already exists."
-            )
-        return value
-
-    def create(self, validated_data):
-        validated_data.pop('password2')
-        try:
-            user = User.objects.create_user(
-                username=validated_data['username'],
-                email=validated_data['email'],
-                password=validated_data['password']
-            )
-            return user
-        except IntegrityError as e:
-            if 'unique constraint' in str(e).lower():
-                if 'username' in str(e).lower():
-                    raise serializers.ValidationError({
-                        "username": "A user with that username already exists."
-                    })
-            raise
 
 class UserInfoSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)

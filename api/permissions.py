@@ -14,6 +14,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return obj.profile.user == request.user
         return False
 
+
 class IsCurrentUserOrReadOnly(permissions.BasePermission):
     """
     Custom permission for UserProfile to ensure only the profile owner 

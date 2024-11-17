@@ -10,33 +10,13 @@ from .models import UserProfile, Goal
 from .serializers import (
     UserProfileSerializer,
     GoalSerializer,
-    UserRegistrationSerializer,
     UserInfoSerializer
 )
 from .permissions import IsOwnerOrReadOnly
 from django.urls import reverse
+from django.db.models import Sum
 
 logger = logging.getLogger(__name__)
-
-class UserRegistrationView(generics.CreateAPIView):
-    """View for user registration."""
-    permission_classes = [permissions.AllowAny]
-    serializer_class = UserRegistrationSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                user = serializer.save()
-                UserProfile.objects.create(user=user)
-                return Response({
-                    "user": UserRegistrationSerializer(user, context=self.get_serializer_context()).data,
-                    "message": "User Created Successfully"
-                }, status=status.HTTP_201_CREATED)
-            except Exception as e:
-                logger.error(f"Error creating user: {str(e)}")
-                return Response({"error": "Could not create user", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for User Profiles."""
@@ -63,6 +43,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         stats = {
             'total_workouts': profile.user.workouts.count(),
             'workouts_count': profile.workouts_count,
+            'total_workout_time': profile.user.workouts.aggregate(total_time=Sum('duration'))['total_time']
         }
         return Response(stats)
 
@@ -138,6 +119,9 @@ class GoalViewSet(viewsets.ModelViewSet):
             'total_goals': goals.count(),
             'completed_goals': goals.filter(completed=True).count(),
             'active_goals': goals.filter(completed=False).count(),
-            'upcoming_deadlines': goals.filter(completed=False, deadline__gte=timezone.now()).order_by('deadline')[:5].values('description', 'deadline')
+            'upcoming_deadlines': [
+                {'description': goal.description, 'deadline': goal.deadline}
+                for goal in goals.filter(completed=False, deadline__gte=timezone.now()).order_by('deadline')[:5]
+            ]
         }
         return Response(summary)

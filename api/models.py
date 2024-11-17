@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from cloudinary.models import CloudinaryField
+from django.core.exceptions import ValidationError
+
 
 class UserProfile(models.Model):
     GENDER_CHOICES = [
@@ -28,6 +30,12 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+    def clean(self):
+        """Ensure that date_of_birth is not in the future."""
+        if self.date_of_birth and self.date_of_birth > timezone.now().date():
+            raise ValidationError("Date of birth cannot be in the future.")
+
 
 class Goal(models.Model):
     GOAL_TYPES = [
@@ -60,8 +68,11 @@ class Goal(models.Model):
         if self.deadline:
             days_total = (self.deadline - self.created_at.date()).days
             days_passed = (timezone.now().date() - self.created_at.date()).days
-            return min(int((days_passed / days_total) * 100), 100) if days_total > 0 else 0
+            if days_total > 0:
+                return min(int((days_passed / days_total) * 100), 100)
+            return 0
         return 0
+
 
 def create_user_profile(sender, instance, created, **kwargs):
     """Signal to create user profile when user is created."""
