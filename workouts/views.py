@@ -59,6 +59,8 @@ class WorkoutViewSet(viewsets.ModelViewSet):
                 date_logged__gte=week_start,
                 date_logged__lte=today
             ).count()
+            
+            # Optimize the `workouts_by_date` query to avoid repeating the same query
             workouts_by_date = queryset.annotate(
                 workout_date=TruncDate('date_logged')
             ).values('workout_date').distinct().order_by('-workout_date')
@@ -66,12 +68,14 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             current_streak = 0
             check_date = today
 
-            if not workouts_by_date.filter(workout_date=today).exists():
-                check_date = today - timedelta(days=1)
+            # Avoid calling filter twice
+            if workouts_by_date:
+                if not any(workout['workout_date'] == today for workout in workouts_by_date):
+                    check_date = today - timedelta(days=1)
 
-            while workouts_by_date.filter(workout_date=check_date).exists():
-                current_streak += 1
-                check_date = check_date - timedelta(days=1)
+                while any(workout['workout_date'] == check_date for workout in workouts_by_date):
+                    current_streak += 1
+                    check_date = check_date - timedelta(days=1)
 
             workout_types = (
                 queryset.values('workout_type')
@@ -90,8 +94,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             )
 
             monthly_trends = (
-                queryset.extra(select={'month': "DATE_TRUNC('month', date_logged)"})
-                .values('month')
+                queryset.extra(select={'month': "DATE_TRUNC('month', date_logged)"}).values('month')
                 .annotate(
                     workouts=Count('id'),
                     total_duration=Sum('duration')

@@ -70,14 +70,17 @@ class WorkoutSerializer(serializers.ModelSerializer):
         return data
 
 class WorkoutLikeSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    workout_title = serializers.ReadOnlyField(source='workout.title')
+
     class Meta:
         model = WorkoutLike
-        fields = ['id', 'workout', 'user', 'created_at']
+        fields = ['id', 'workout', 'user', 'created_at', 'username', 'workout_title']
         read_only_fields = ['id', 'user', 'created_at']
 
 class WorkoutCommentSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
-    
+
     class Meta:
         model = WorkoutComment
         fields = ['id', 'workout', 'user', 'username', 'content', 'created_at']
