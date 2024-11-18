@@ -13,7 +13,7 @@ class Profile(models.Model):
     image = CloudinaryField(
         'image',
         folder='profile_images',
-        default='default_profile_qdjgyp'
+        default='default_profile_ylwpgw'
     )
     # Keeping fitness-specific fields
     weight = models.FloatField(null=True, blank=True)
