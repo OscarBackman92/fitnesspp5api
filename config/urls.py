@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
 from .views import root_route
 
 urlpatterns = [
@@ -12,5 +11,6 @@ urlpatterns = [
     # API endpoints
     path('', include('profiles.urls')),
     path('', include('workouts.urls')),
-    path('', include('social.urls')),
+    path('', include('likes.urls')),
+    path('', include('followers.urls')),
 ]

@@ -92,6 +92,8 @@ INSTALLED_APPS = [
     'core',
     'profiles',
     'workouts',
+    'likes',
+    'followers',
 ]
 
 MIDDLEWARE = [
