@@ -316,7 +316,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 #     INTERNAL_IPS = ['127.0.0.1']
 
 
-# if DEBUG:
-#     print(f"DEBUG mode is: {DEBUG}")
-#     CORS_ALLOW_ALL_ORIGINS = True
-#     CORS_ORIGIN_ALLOW_ALL = True
+if DEBUG:
+    print(f"DEBUG mode is: {DEBUG}")
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ORIGIN_ALLOW_ALL = True
