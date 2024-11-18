@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Workout, WorkoutComment, WorkoutLike
 from django.contrib.humanize.templatetags.humanize import naturaltime
 
+
 class WorkoutSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     is_owner = serializers.SerializerMethodField()
@@ -44,6 +45,7 @@ class WorkoutSerializer(serializers.ModelSerializer):
             'likes_count', 'comments_count',
         ]
 
+
 class WorkoutCommentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     is_owner = serializers.SerializerMethodField()
@@ -68,6 +70,7 @@ class WorkoutCommentSerializer(serializers.ModelSerializer):
             'id', 'owner', 'is_owner', 'profile_id', 'profile_image',
             'workout', 'created_at', 'updated_at', 'content'
         ]
+
 
 class WorkoutCommentDetailSerializer(WorkoutCommentSerializer):
     workout = serializers.ReadOnlyField(source='workout.id')

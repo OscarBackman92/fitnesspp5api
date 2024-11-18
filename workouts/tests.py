@@ -7,7 +7,7 @@ from .models import Workout
 class WorkoutTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser', 
+            username='testuser',
             password='testpass123'
         )
         self.client.login(username='testuser', password='testpass123')
@@ -49,7 +49,7 @@ class WorkoutTests(APITestCase):
 
     def test_user_cant_update_another_users_workout(self):
         other_user = User.objects.create_user(
-            username='testuser2', 
+            username='testuser2',
             password='testpass123'
         )
         workout = Workout.objects.create(owner=other_user, **self.workout_data)

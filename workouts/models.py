@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from cloudinary.models import CloudinaryField
 
+
 class Workout(models.Model):
     """
     Workout model, related to User
@@ -36,6 +37,7 @@ class Workout(models.Model):
     def __str__(self):
         return f'{self.id} {self.title}'
 
+
 class WorkoutComment(models.Model):
     """
     Comment model, related to User and Workout
@@ -51,6 +53,7 @@ class WorkoutComment(models.Model):
 
     def __str__(self):
         return self.content
+
 
 class WorkoutLike(models.Model):
     """

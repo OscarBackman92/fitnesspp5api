@@ -9,7 +9,7 @@ from .serializers import ProfileSerializer
 class ProfileModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser', 
+            username='testuser',
             password='testpass123'
         )
 
@@ -21,7 +21,7 @@ class ProfileModelTests(TestCase):
 class ProfileListViewTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser', 
+            username='testuser',
             password='testpass123'
         )
 
@@ -41,7 +41,7 @@ class ProfileListViewTests(APITestCase):
 
     def test_user_cant_update_another_users_profile(self):
         other_user = User.objects.create_user(
-            username='testuser2', 
+            username='testuser2',
             password='testpass123'
         )
         self.client.login(username='testuser', password='testpass123')

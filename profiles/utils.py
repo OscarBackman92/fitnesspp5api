@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
 
+
 def cached_property_with_ttl(ttl: int = 300):
     """
     Decorator for caching property with TTL
@@ -20,14 +21,13 @@ def cached_property_with_ttl(ttl: int = 300):
         def wrapper(self, *args, **kwargs) -> Any:
             cache_key = f'{self.__class__.__name__}_{self.id}_{func.__name__}'
             result = cache.get(cache_key)
-            
             if result is None:
                 result = func(self, *args, **kwargs)
                 cache.set(cache_key, result, ttl)
-            
             return result
         return property(wrapper)
     return decorator
+
 
 def measure_execution_time(func: Callable) -> Callable:
     """Decorator to measure and log function execution time"""
@@ -36,7 +36,6 @@ def measure_execution_time(func: Callable) -> Callable:
         start_time = time.time()
         result = func(*args, **kwargs)
         execution_time = time.time() - start_time
-        
         logger.info(
             f'{func.__name__} took {execution_time:.2f} seconds to execute',
             extra={
@@ -46,6 +45,7 @@ def measure_execution_time(func: Callable) -> Callable:
         )
         return result
     return wrapper
+
 
 def bulk_cache_update(objects: list, serializer_class: Any) -> None:
     """
@@ -60,6 +60,7 @@ def bulk_cache_update(objects: list, serializer_class: Any) -> None:
             serializer = serializer_class(obj)
             cache.set(cache_key, serializer.data, timeout=60*15)
 
+
 def clear_cache_pattern(pattern: str) -> None:
     """
     Clear all cache keys matching a pattern
@@ -69,6 +70,7 @@ def clear_cache_pattern(pattern: str) -> None:
     keys = cache.keys(pattern)
     if keys:
         cache.delete_many(keys)
+
 
 def cache_response(timeout: int = 300, key_prefix: str = ''):
     """
@@ -84,13 +86,11 @@ def cache_response(timeout: int = 300, key_prefix: str = ''):
                 f"{key_prefix}:{request.path}:"
                 f"{request.query_params}:{request.user.id}"
             )
-            
             response = cache.get(cache_key)
-            
             if response is None:
                 response = func(self, request, *args, **kwargs)
                 cache.set(cache_key, response, timeout)
-            
+
             return response
         return wrapper
     return decorator

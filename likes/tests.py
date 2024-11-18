@@ -8,11 +8,11 @@ from .models import Like
 class LikeTests(APITestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(
-            username='user1', 
+            username='user1',
             password='pass123'
         )
         self.user2 = User.objects.create_user(
-            username='user2', 
+            username='user2',
             password='pass123'
         )
         self.workout = Workout.objects.create(
