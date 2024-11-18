@@ -26,7 +26,6 @@ def api_root(request):
         'workouts': {
             'list': request.build_absolute_uri(reverse('workouts:workout-list')),
             'statistics': request.build_absolute_uri(reverse('workouts:workout-statistics')),
-            'summary': request.build_absolute_uri(reverse('workouts:workout-summary')),
             'detail': request.build_absolute_uri(reverse('workouts:workout-detail', kwargs={'pk': 1})),
         },
         'social': {
@@ -36,7 +35,6 @@ def api_root(request):
             'endpoints': {
                 'like_post': request.build_absolute_uri(reverse('social:feed-like', kwargs={'pk': 1})),
                 'post_comments': request.build_absolute_uri(reverse('social:feed-comments', kwargs={'pk': 1})),
-                'delete_comment': request.build_absolute_uri(reverse('social:comments-delete', kwargs={'pk': 1})),
             },
         },
         'documentation': {

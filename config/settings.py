@@ -15,7 +15,7 @@ DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
 # Update ALLOWED_HOSTS to include both development and production hosts
 ALLOWED_HOSTS = ['http://localhost:3000',
-                '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com']
+                '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com', 'localhost']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -210,6 +210,7 @@ SWAGGER_SETTINGS = {
 }
 
 if DEBUG:
+    print(f"DEBUG mode is:")
     SECURE_SSL_REDIRECT = False
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
@@ -224,10 +225,6 @@ else:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-REST_AUTH = {
-    'USE_JWT': False,
-    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
-}
 
 SITE_ID = 1
 
@@ -317,6 +314,5 @@ if DEBUG:
 
 
 if DEBUG:
-    print(f"DEBUG mode is: {DEBUG}")
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ORIGIN_ALLOW_ALL = True
