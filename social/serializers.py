@@ -1,55 +1,36 @@
+from django.db import IntegrityError
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import WorkoutPost, Comment
-from workouts.serializers import WorkoutSerializer
+from .models import Follower, Like
 
-class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'profile_image']
-
-    def get_profile_image(self, obj):
-        if hasattr(obj, 'profile') and obj.profile.profile_image:
-            return obj.profile.profile_image.url
-        return None
-
-class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+class FollowerSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    followed_name = serializers.ReadOnlyField(source='followed.username')
 
     class Meta:
-        model = Comment
-        fields = ['id', 'user', 'content', 'created_at', 'updated_at']
-        read_only_fields = ['user']
-
-class WorkoutPostSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    workout = WorkoutSerializer(read_only=True)
-    likes_count = serializers.SerializerMethodField()
-    comments_count = serializers.SerializerMethodField()
-    has_liked = serializers.SerializerMethodField()
-    latest_comments = serializers.SerializerMethodField()
-
-    class Meta:
-        model = WorkoutPost
+        model = Follower
         fields = [
-            'id', 'user', 'workout', 'created_at', 'updated_at',
-            'likes_count', 'comments_count', 'has_liked', 'latest_comments'
+            'id', 'owner', 'followed', 'followed_name', 'created_at'
         ]
 
-    def get_likes_count(self, obj):
-        return obj.likes.count()
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({
+                'detail': 'possible duplicate'
+            })
 
-    def get_comments_count(self, obj):
-        return obj.comments.count()
+class LikeSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
 
-    def get_has_liked(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
-        return False
+    class Meta:
+        model = Like
+        fields = ['id', 'owner', 'workout', 'created_at']
 
-    def get_latest_comments(self, obj):
-        latest = obj.comments.select_related('user')[:3]
-        return CommentSerializer(latest, many=True).data
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({
+                'detail': 'possible duplicate'
+            })

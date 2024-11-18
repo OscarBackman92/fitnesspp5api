@@ -1,101 +1,80 @@
 from rest_framework import serializers
-from .models import Workout, WorkoutLike, WorkoutComment
-from django.utils import timezone
+from .models import Workout, WorkoutComment, WorkoutLike
+from django.contrib.humanize.templatetags.humanize import naturaltime
 
 class WorkoutSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source='user.username')
+    owner = serializers.ReadOnlyField(source='owner.username')
+    is_owner = serializers.SerializerMethodField()
+    profile_id = serializers.ReadOnlyField(source='owner.profile.id')
+    profile_image = serializers.ReadOnlyField(source='owner.profile.image.url')
+    like_id = serializers.SerializerMethodField()
+    comments_count = serializers.ReadOnlyField()
+    likes_count = serializers.ReadOnlyField()
     workout_type_display = serializers.CharField(
-        source='get_workout_type_display', 
+        source='get_workout_type_display',
         read_only=True
     )
-    likes_count = serializers.IntegerField(read_only=True, default=0)
-    has_liked = serializers.SerializerMethodField()
-    comments_count = serializers.IntegerField(read_only=True, default=0)
+
+    def validate_image(self, value):
+        if value.size > 2 * 1024 * 1024:
+            raise serializers.ValidationError('Image size larger than 2MB!')
+        if value.image.height > 4096:
+            raise serializers.ValidationError(
+                'Image height larger than 4096px!'
+            )
+        if value.image.width > 4096:
+            raise serializers.ValidationError(
+                'Image width larger than 4096px!'
+            )
+        return value
+
+    def get_is_owner(self, obj):
+        request = self.context['request']
+        return request.user == obj.owner
+
+    def get_like_id(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            like = WorkoutLike.objects.filter(
+                owner=user, workout=obj
+            ).first()
+            return like.id if like else None
+        return None
 
     class Meta:
         model = Workout
         fields = [
-            'id', 
-            'username', 
-            'title',
-            'workout_type', 
-            'workout_type_display',
-            'date_logged', 
-            'duration', 
-            'intensity', 
-            'notes',
-            'created_at', 
-            'updated_at',
-            'likes_count',
-            'has_liked',
-            'comments_count'
+            'id', 'owner', 'is_owner', 'profile_id',
+            'profile_image', 'created_at', 'updated_at',
+            'title', 'description', 'image', 'workout_type',
+            'workout_type_display', 'duration', 'like_id',
+            'likes_count', 'comments_count',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-    def get_has_liked(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return WorkoutLike.objects.filter(
-                workout=obj, 
-                user=request.user
-            ).exists()
-        return False
-
-    def validate_title(self, value):
-        """Validate workout title."""
-        if not value.strip():
-            raise serializers.ValidationError("Title cannot be empty")
-        return value.strip()
-
-    def validate_duration(self, value):
-        """Validate that duration is positive and within bounds."""
-        if value <= 0:
-            raise serializers.ValidationError("Duration must be greater than 0")
-        if value > 1440:  # 24 hours in minutes
-            raise serializers.ValidationError("Duration cannot exceed 24 hours")
-        return value
-
-    def validate(self, data):
-        """Additional validation if needed."""
-        if data.get('date_logged') and data['date_logged'] > timezone.now().date():
-            raise serializers.ValidationError(
-                {"date_logged": "Cannot log workouts in the future"}
-            )
-        
-        # Set default title if not provided
-        if 'title' not in data or not data['title']:
-            workout_type = data.get('workout_type', '').title()
-            data['title'] = f"{workout_type} Workout"
-            
-        return data
-
-class WorkoutLikeSerializer(serializers.ModelSerializer):
-<<<<<<< HEAD
-    username = serializers.ReadOnlyField(source='user.username')
-    workout_title = serializers.ReadOnlyField(source='workout.title')
-
-    class Meta:
-        model = WorkoutLike
-        fields = ['id', 'workout', 'user', 'created_at', 'username', 'workout_title']
-=======
-    class Meta:
-        model = WorkoutLike
-        fields = ['id', 'workout', 'user', 'created_at']
->>>>>>> 49de782 (feat: Add title field and optimize workout models)
-        read_only_fields = ['id', 'user', 'created_at']
 
 class WorkoutCommentSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source='user.username')
-<<<<<<< HEAD
+    owner = serializers.ReadOnlyField(source='owner.username')
+    is_owner = serializers.SerializerMethodField()
+    profile_id = serializers.ReadOnlyField(source='owner.profile.id')
+    profile_image = serializers.ReadOnlyField(source='owner.profile.image.url')
+    created_at = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+
+    def get_is_owner(self, obj):
+        request = self.context['request']
+        return request.user == obj.owner
+
+    def get_created_at(self, obj):
+        return naturaltime(obj.created_at)
+
+    def get_updated_at(self, obj):
+        return naturaltime(obj.updated_at)
 
     class Meta:
         model = WorkoutComment
-        fields = ['id', 'workout', 'user', 'username', 'content', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
-=======
-    
-    class Meta:
-        model = WorkoutComment
-        fields = ['id', 'workout', 'user', 'username', 'content', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
->>>>>>> 49de782 (feat: Add title field and optimize workout models)
+        fields = [
+            'id', 'owner', 'is_owner', 'profile_id', 'profile_image',
+            'workout', 'created_at', 'updated_at', 'content'
+        ]
+
+class WorkoutCommentDetailSerializer(WorkoutCommentSerializer):
+    workout = serializers.ReadOnlyField(source='workout.id')

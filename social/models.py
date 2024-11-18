@@ -1,42 +1,38 @@
 from django.db import models
 from django.contrib.auth.models import User
-from workouts.models import Workout
 
-class WorkoutPost(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_posts')
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='posts')
+class Follower(models.Model):
+    """
+    Follower model, related to 'owner' and 'followed'.
+    'owner' is a User that is following a User.
+    'followed' is a User that is followed by 'owner'.
+    """
+    owner = models.ForeignKey(
+        User, related_name='following', on_delete=models.CASCADE
+    )
+    followed = models.ForeignKey(
+        User, related_name='followed', on_delete=models.CASCADE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = 'Workout Post'
-        verbose_name_plural = 'Workout Posts'
+        unique_together = ['owner', 'followed']
 
     def __str__(self):
-        return f"{self.user.username}'s {self.workout.workout_type} workout"
+        return f'{self.owner} follows {self.followed}'
 
 class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
-    post = models.ForeignKey(WorkoutPost, on_delete=models.CASCADE, related_name='likes')
+    """
+    Like model for handling workout likes
+    """
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    workout = models.ForeignKey('workouts.Workout', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'post')
         ordering = ['-created_at']
+        unique_together = ['owner', 'workout']
 
     def __str__(self):
-        return f"{self.user.username} likes {self.post}"
-
-class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    post = models.ForeignKey(WorkoutPost, on_delete=models.CASCADE, related_name='comments')
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.user.username}'s comment on {self.post}"
+        return f'{self.owner} likes {self.workout}'

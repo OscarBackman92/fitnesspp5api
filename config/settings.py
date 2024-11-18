@@ -89,7 +89,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'django_filters',
     'drf_yasg',
-    'api',
+    'core',
+    'profiles',
     'workouts',
     'social',
 ]
@@ -300,8 +301,7 @@ REST_AUTH = {
     'USE_JWT': False,
     'JWT_AUTH_COOKIE': None,
     'JWT_AUTH_REFRESH_COOKIE': None,
-    'USER_DETAILS_SERIALIZER': 'api.serializers.UserInfoSerializer',
-    # Disable email verification temporarily
+    'USER_DETAILS_SERIALIZER': 'core.serializers.CurrentUserSerializer',
     'REGISTER_VERIFICATION_ENABLED': False,
     'LOGIN_VERIFICATION_ENABLED': False,
 }
@@ -310,13 +310,13 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
-if DEBUG:
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-    INTERNAL_IPS = ['127.0.0.1']
+# if DEBUG:
+#     INSTALLED_APPS += ['debug_toolbar']
+#     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+#     INTERNAL_IPS = ['127.0.0.1']
 
 
-if DEBUG:
-    print(f"DEBUG mode is: {DEBUG}")
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ORIGIN_ALLOW_ALL = True
+# if DEBUG:
+#     print(f"DEBUG mode is: {DEBUG}")
+#     CORS_ALLOW_ALL_ORIGINS = True
+#     CORS_ORIGIN_ALLOW_ALL = True
