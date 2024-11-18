@@ -13,6 +13,14 @@ class FollowerSerializer(serializers.ModelSerializer):
             'id', 'owner', 'followed', 'followed_name', 'created_at'
         ]
 
+    def validate_followed(self, value):
+        request = self.context['request']
+        if request.user == value:
+            raise serializers.ValidationError(
+                'You can\'t follow yourself.'
+            )
+        return value
+
     def create(self, validated_data):
         try:
             return super().create(validated_data)
