@@ -111,7 +111,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'config.urls'
 
 if 'DATABASE_URL' in os.environ:
-    print('I am here')
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=60,
@@ -211,7 +210,6 @@ SWAGGER_SETTINGS = {
 }
 
 if DEBUG:
-    print(f"DEBUG mode is:")
     SECURE_SSL_REDIRECT = False
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
