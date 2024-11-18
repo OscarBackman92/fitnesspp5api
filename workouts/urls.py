@@ -10,4 +10,3 @@ router.register('', WorkoutViewSet, basename='workout')
 urlpatterns = [
     path('', include(router.urls)),
 ]
-

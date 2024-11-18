@@ -47,8 +47,8 @@ class Workout(models.Model):
     class Meta:
         ordering = ['-date_logged', '-created_at']
         indexes = [
-            models.Index(fields=['user', 'date_logged']),  # Compound index for user queries
-            models.Index(fields=['workout_type', 'intensity'])  # Index for filtering
+            models.Index(fields=['user', 'date_logged']),
+            models.Index(fields=['workout_type', 'intensity'])
         ]
         verbose_name = 'Workout'
         verbose_name_plural = 'Workouts'

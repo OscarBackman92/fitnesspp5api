@@ -110,7 +110,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-if 'test' not in sys.argv and 'DATABASE_URL' in os.environ:
+if 'DATABASE_URL' in os.environ:
+    print('I am here')
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=60,
