@@ -37,11 +37,12 @@ urlpatterns = [
     ])),
 
     # API Documentation
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger/', schema_view.with_ui(
+        'swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui(
+        ), name='schema-redoc'),
 ]
 
-# Debug toolbar (only in development)
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
@@ -49,4 +50,5 @@ if settings.DEBUG:
     ] + urlpatterns
 
     # Serve media files in development
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

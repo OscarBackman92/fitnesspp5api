@@ -14,8 +14,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
 
 # Update ALLOWED_HOSTS to include both development and production hosts
-ALLOWED_HOSTS = ['http://localhost:3000',
-                '127.0.0.1', 'fitnessapi-d773a1148384.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = [
+    'http://localhost:3000', '127.0.0.1',
+    'fitnessapi-d773a1148384.herokuapp.com', 'localhost']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -166,7 +167,8 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
     'CLOUDINARY_API_PROXY': None,
-    'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg' 'webp', 'bmp', 'ico'],
+    'STATIC_IMAGES_EXTENSIONS': [
+        'jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg' 'webp', 'bmp', 'ico'],
     'MAGIC_FILE_PATH': None,
     'INVALID_VIDEO_ERROR_MESSAGE': '',
     'TIMEOUT': 30,
@@ -191,7 +193,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 

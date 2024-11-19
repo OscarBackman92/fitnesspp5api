@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import WorkoutPost, Comment
 from workouts.serializers import WorkoutSerializer
 
+
 class UserSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
 
@@ -15,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.profile.profile_image.url
         return None
 
+
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
@@ -22,6 +24,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'user', 'content', 'created_at', 'updated_at']
         read_only_fields = ['user']
+
 
 class WorkoutPostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
