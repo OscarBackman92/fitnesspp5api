@@ -1,235 +1,300 @@
-# FitTrack API
-
-A comprehensive Django REST Framework-powered fitness tracking platform that enables users to track workouts, set goals, and build a fitness community.
+# FitTrack API Backend
 
 [![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)](https://python.org)
 [![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15+-brightgreen.svg)](https://www.django-rest-framework.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Table of Contents
-1. [Description](#description)
-2. [Features](#features)
-3. [Prerequisites](#prerequisites)
-4. [Installation](#installation)
-5. [Configuration](#configuration)
-6. [Usage](#usage)
-7. [API Endpoints](#api-endpoints)
-8. [Authentication](#authentication)
-9. [Testing](#testing)
-10. [License](#license)
+## Project Strategy & Goals
 
-## Description
+The FitTrack API aims to provide a robust backend infrastructure for fitness tracking with:
+- Secure user authentication and data management
+- Real-time workout tracking capabilities
+- Social features for community engagement
+- Performance optimized data retrieval
+- Scalable architecture
 
-FitTrack API is a robust REST API designed to provide a comprehensive fitness tracking solution. The platform enables users to monitor various types of workouts, track progress, set and achieve fitness goals, and engage with a fitness community.
+## Agile Development Methodology
 
-## Features
+This project follows Agile principles with:
+- Two-week sprint cycles
+- Daily stand-ups
+- Sprint retrospectives
+- Continuous integration/deployment
+- Feature-based branching strategy
 
-- User Authentication and Authorization
-- Profile Management with Image Upload
-- Workout Tracking and Analysis
-- Goal Setting and Progress Monitoring
-- Social Features (Following, Likes, Comments)
-- Statistical Analysis and Progress Visualization
-- Cloudinary Integration for Image Storage
-- Redis Caching for Performance
-- Comprehensive Test Coverage
+### Sprint Planning
+Sprints are organized into:
+- Must-have features
+- Should-have features
+- Could-have features
+- Won't-have features
 
-## Prerequisites
+## Database Schema
 
-- Python 3.12+
-- PostgreSQL
-- Redis
-- Cloudinary Account
-- Git
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd fitnesspp5api
+```mermaid
+erDiagram
+    User ||--|| Profile : has
+    User ||--o{ Workout : creates
+    User ||--o{ Goal : sets
+    Workout ||--o{ Like : receives
+    Workout ||--o{ Comment : has
+    User ||--o{ Follow : follows
 ```
 
-2. Create and activate virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Set up environment variables (create .env file):
-```env
-DEVELOPMENT=True
-DATABASE_URL=postgres://user:pass@localhost:5432/dbname
-SECRET_KEY=your-secret-key
-CLOUDINARY_URL=cloudinary://your-cloudinary-url
-```
-
-5. Run migrations:
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-6. Create superuser:
-```bash
-python manage.py createsuperuser
-```
-
-## Configuration
-
-### Required Environment Variables:
-
-```env
-# Development Settings
-DEVELOPMENT=True/False
-
-# Database Configuration
-DATABASE_URL=postgres://user:pass@localhost:5432/dbname
-
-# Security
-SECRET_KEY=your-secret-key
-
-# Cloudinary Configuration
-CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
-
-# Email Configuration (Optional)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-```
-
-### Cloudinary Setup:
-1. Create a Cloudinary account
-2. Get your Cloudinary URL from the dashboard
-3. Add to .env file
-4. Images will automatically be stored in Cloudinary
-
-## Usage
-
-1. Start the development server:
-```bash
-python manage.py runserver
-```
-
-2. Access the API at `http://localhost:8000/api/`
-
-3. View API documentation:
-- Swagger UI: `http://localhost:8000/swagger/`
-- ReDoc: `http://localhost:8000/redoc/`
-
-## API Endpoints
+## Security Considerations
 
 ### Authentication
-- `POST /api/auth/register/` - Register new user
-- `POST /api/auth/login/` - Login user
-- `POST /api/auth/logout/` - Logout user
-- `GET /api/auth/user/` - Get current user info
+- JWT token authentication
+- Token refresh mechanism
+- Password validation requirements
+- Session management
 
-### Profiles
-- `GET /api/profiles/` - List all profiles
-- `GET /api/profiles/{id}/` - Get specific profile
-- `PUT /api/profiles/{id}/` - Update profile
-- `POST /api/profiles/{id}/upload_image/` - Upload profile image
+### Data Protection
+- CORS configuration
+- XSS protection
+- CSRF protection
+- SQL injection prevention
 
-### Workouts
-- `GET /api/workouts/` - List all workouts
-- `POST /api/workouts/` - Create new workout
-- `GET /api/workouts/{id}/` - Get specific workout
-- `PUT /api/workouts/{id}/` - Update workout
-- `DELETE /api/workouts/{id}/` - Delete workout
-- `GET /api/workouts/statistics/` - Get workout statistics
-- `GET /api/workouts/summary/` - Get workout summary
-
-### Goals
-- `GET /api/goals/` - List all goals
-- `POST /api/goals/` - Create new goal
-- `GET /api/goals/{id}/` - Get specific goal
-- `PUT /api/goals/{id}/` - Update goal
-- `DELETE /api/goals/{id}/` - Delete goal
-- `POST /api/goals/{id}/toggle_completion/` - Toggle goal completion
-
-### Social
-- `GET /api/social/feed/` - Get social feed
-- `POST /api/social/feed/{id}/like/` - Like a workout
-- `POST /api/social/feed/{id}/comments/` - Comment on workout
-
-## Authentication
-
-The API uses Token Authentication. Include the token in the Authorization header:
-
-```http
-Authorization: Token your-auth-token
+### API Security
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 ```
 
-To get a token:
-1. Register a new user
-2. Login with credentials
-3. Save the returned token
-4. Include token in subsequent requests
+## Development vs Production Settings
 
-Example using curl:
+### Development
+```python
+DEBUG = True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+### Production
+```python
+DEBUG = False
+ALLOWED_HOSTS = ['fittrack-api.herokuapp.com']
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
+}
+```
+
+## Environment Variables Setup
+
+Required environment variables:
+```env
+# Development
+DEBUG=True
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgres://user:pass@localhost:5432/dbname
+
+# AWS Configuration
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_STORAGE_BUCKET_NAME=your-bucket-name
+
+# Email Configuration
+EMAIL_HOST_USER=your-email@domain.com
+EMAIL_HOST_PASSWORD=your-email-password
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379/1
+```
+
+## Data Models
+
+### Profile Model
+```python
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='profile_images', blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Stats fields
+    total_workouts = models.IntegerField(default=0)
+    workout_streak = models.IntegerField(default=0)
+    last_workout = models.DateTimeField(null=True)
+```
+
+### Workout Model
+```python
+class Workout(models.Model):
+    WORKOUT_TYPES = [
+        ('cardio', 'Cardio'),
+        ('strength', 'Strength'),
+        ('flexibility', 'Flexibility'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=WORKOUT_TYPES)
+    duration = models.IntegerField()
+    intensity = models.CharField(max_length=20)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+```
+
+## Caching Strategy
+
+Redis is used for caching with different TTLs:
+```python
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Cache timeouts
+CACHE_TTL = {
+    'workout_list': 300,  # 5 minutes
+    'profile': 3600,      # 1 hour
+    'stats': 1800        # 30 minutes
+}
+```
+
+## Performance Optimizations
+
+### Database Optimizations
+- Indexed fields for frequent queries
+- Select_related for foreign keys
+- Prefetch_related for reverse relations
+- Pagination for large datasets
+
+### Query Optimizations
+```python
+# Efficient querying
+Workout.objects.select_related('user')\
+    .prefetch_related('likes', 'comments')\
+    .filter(created_at__gte=start_date)\
+    .order_by('-created_at')
+```
+
+## API Documentation
+
+Swagger/ReDoc integration:
+```python
+INSTALLED_APPS += ['drf_yasg']
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
+```
+
+Access API documentation at:
+- Swagger UI: `/swagger/`
+- ReDoc: `/redoc/`
+
+## Error Handling
+
+Custom exception handler:
+```python
+from rest_framework.views import exception_handler
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+    
+    if response is not None:
+        response.data['status_code'] = response.status_code
+        response.data['message'] = str(exc)
+    
+    return response
+```
+
+## Backup and Recovery
+
+### Automated Backups
+- Daily database backups
+- Media files backup to S3
+- Logs backup
+
+### Recovery Procedures
+1. Database restoration
+2. Media files recovery
+3. Application state verification
+
+## Version Control Workflow
+
+1. Feature branches:
 ```bash
-# Login
-curl -X POST http://localhost:8000/api/auth/login/ \
-     -H "Content-Type: application/json" \
-     -d '{"username":"your_username","password":"your_password"}'
-
-# Use token
-curl http://localhost:8000/api/workouts/ \
-     -H "Authorization: Token your-auth-token"
+git checkout -b feature/new-feature
+git add .
+git commit -m "feat: add new feature"
+git push origin feature/new-feature
 ```
 
-## Testing
+2. Pull requests:
+- Create PR from feature branch
+- Code review required
+- CI/CD checks pass
+- Merge to main
 
-1. Run all tests:
-```bash
-python manage.py test
-```
+## Contributing Guidelines
 
-2. Run specific test file:
-```bash
-python manage.py test workouts.tests
-```
+1. Fork the repository
+2. Create feature branch
+3. Follow coding standards:
+   - PEP 8 for Python
+   - DRF best practices
+   - Test coverage required
+4. Submit PR with:
+   - Description
+   - Testing steps
+   - Screenshots if applicable
 
-3. Run with coverage:
-```bash
-coverage run manage.py test
-coverage report
-```
+## Cross-Browser Testing
 
-4. Test specific features:
-```bash
-# Test authentication
-python manage.py test api.tests.UserProfileAPITests
+Tested on:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-# Test workouts
-python manage.py test workouts.tests.WorkoutViewSetTests
-```
+Using Browserstack for compatibility testing.
 
-## License
+## Credits
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### Tools & Libraries
+- Django Rest Framework
+- dj-rest-auth
+- django-filter
+- django-cors-headers
+- django-redis
+- Cloudinary
 
-```text
-MIT License
+### Tutorials & Resources
+- DRF Official Documentation
+- Django Documentation
+- Real Python Tutorials
+- TestDriven.io
 
-Copyright (c) 2024
+## Acknowledgments
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-[Rest of MIT License text...]
-```
-
-For additional information or support, please open an issue in the repository.
+Special thanks to:
+- Django community
+- Code Institute tutors
+- Project mentors
+- Testing volunteers
