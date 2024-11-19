@@ -1,156 +1,274 @@
-# FitTrack API Backend
+# FitPro API Backend
 
 [![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)](https://python.org)
 [![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15+-brightgreen.svg)](https://www.django-rest-framework.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Project Strategy & Goals
+## Table of Contents
 
-The FitTrack API aims to provide a robust backend infrastructure for fitness tracking with:
-- Secure user authentication and data management
-- Real-time workout tracking capabilities
-- Social features for community engagement
-- Performance optimized data retrieval
-- Scalable architecture
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Database Design](#database-design)
+4. [API Endpoints](#api-endpoints)
+5. [Models](#models)
+6. [Views & Serializers](#views--serializers)
+7. [Authentication](#authentication)
+8. [Testing](#testing)
+9. [Deployment](#deployment)
 
-## Agile Development Methodology
+## Overview
 
-This project follows Agile principles with:
-- Two-week sprint cycles
-- Daily stand-ups
-- Sprint retrospectives
-- Continuous integration/deployment
-- Feature-based branching strategy
+FitPro's backend API provides comprehensive fitness tracking functionality with:
 
-### Sprint Planning
-Sprints are organized into:
-- Must-have features
-- Should-have features
-- Could-have features
-- Won't-have features
+- JWT-based authentication
+- Workout tracking and analysis
+- Social features and interactions
+- Statistical reporting
+- Goal setting and monitoring
 
-## Database Schema
+## Features
+
+### Core Features
+
+- User authentication and profile management
+- Comprehensive workout tracking
+- Social interactions (likes, comments, follows)
+- Goal setting and progress monitoring
+- Statistical analysis and reporting
+
+## Database Design
+
+![database](/readme_images/api_erd.png)
 
 ```mermaid
 erDiagram
-    User ||--|| Profile : has
-    User ||--o{ Workout : creates
-    User ||--o{ Goal : sets
-    Workout ||--o{ Like : receives
-    Workout ||--o{ Comment : has
-    User ||--o{ Follow : follows
-```
-
-## Security Considerations
-
-### Authentication
-- JWT token authentication
-- Token refresh mechanism
-- Password validation requirements
-- Session management
-
-### Data Protection
-- CORS configuration
-- XSS protection
-- CSRF protection
-- SQL injection prevention
-
-### API Security
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-```
-
-## Development vs Production Settings
-
-### Development
-```python
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-```
-
-### Production
-```python
-DEBUG = False
-ALLOWED_HOSTS = ['fittrack-api.herokuapp.com']
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
-    )
-}
-```
-
-## Environment Variables Setup
-
-Required environment variables:
-```env
-# Development
-DEBUG=True
-SECRET_KEY=your-secret-key
-DATABASE_URL=postgres://user:pass@localhost:5432/dbname
-
-# AWS Configuration
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_STORAGE_BUCKET_NAME=your-bucket-name
-
-# Email Configuration
-EMAIL_HOST_USER=your-email@domain.com
-EMAIL_HOST_PASSWORD=your-email-password
-
-# Redis Configuration
-REDIS_URL=redis://localhost:6379/1
-```
-
-## Data Models
-
-### Profile Model
-```python
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profile_images', blank=True)
-    bio = models.TextField(max_length=500, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    User ||--||  UserProfile : has
+    User ||--o{  Workout : creates
+    User ||--o{  Goal : sets
+    User ||--o{  WorkoutLike : makes
+    User ||--o{  WorkoutComment : posts
+    User ||--o{  WorkoutPost : shares
     
-    # Stats fields
-    total_workouts = models.IntegerField(default=0)
-    workout_streak = models.IntegerField(default=0)
-    last_workout = models.DateTimeField(null=True)
+    UserProfile {
+        int id PK
+        string name
+        text bio
+        float weight
+        float height
+        image profile_image
+        date date_of_birth
+        string gender
+        datetime created_at
+        datetime updated_at
+    }
+
+    Workout {
+        int id PK
+        string title
+        string workout_type
+        date date_logged
+        int duration
+        string intensity
+        text notes
+        image image
+        datetime created_at
+        datetime updated_at
+        int user FK
+    }
+
+    Goal {
+        int id PK
+        string type
+        text description
+        string target
+        date deadline
+        boolean completed
+        datetime created_at
+        datetime updated_at
+        int user_profile FK
+    }
+
+    WorkoutLike {
+        int id PK
+        datetime created_at
+        int user FK
+        int workout FK
+    }
+
+    WorkoutComment {
+        int id PK
+        text content
+        datetime created_at
+        int user FK
+        int workout FK
+    }
+
+    WorkoutPost {
+        int id PK
+        datetime created_at
+        datetime updated_at
+        int user FK
+        int workout FK
+    }
 ```
+
+## Models
 
 ### Workout Model
+
 ```python
 class Workout(models.Model):
     WORKOUT_TYPES = [
-        ('cardio', 'Cardio'),
-        ('strength', 'Strength'),
-        ('flexibility', 'Flexibility'),
+        (CARDIO, 'Cardio'),
+        (STRENGTH, 'Strength Training'),
+        (FLEXIBILITY, 'Flexibility'),
+        (SPORTS, 'Sports'),
+        (OTHER, 'Other'),
     ]
-    
+
+    INTENSITY_LEVELS = [
+        (LOW, 'Low'),
+        (MODERATE, 'Moderate'),
+        (HIGH, 'High'),
+    ]
+
+    title = models.CharField(max_length=200, default="My Workout")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20, choices=WORKOUT_TYPES)
-    duration = models.IntegerField()
-    intensity = models.CharField(max_length=20)
+    workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES)
+    date_logged = models.DateField(default=timezone.now)
+    duration = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)])
+    intensity = models.CharField(max_length=20, choices=INTENSITY_LEVELS, default=MODERATE)
     notes = models.TextField(blank=True)
+    image = CloudinaryField('image', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_logged', '-created_at']
 ```
 
-## Caching Strategy
+### Profile Model
 
-Redis is used for caching with different TTLs:
+```python
+class UserProfile(models.Model):
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    height = models.FloatField(null=True, blank=True)
+    profile_image = CloudinaryField('image', folder='profile_images')
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+```
+
+## Views & Serializers
+
+### Workout Views
+
+```python
+class WorkoutViewSet(viewsets.ModelViewSet):
+    serializer_class = WorkoutSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    
+    def get_queryset(self):
+        return Workout.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['GET'])
+    def statistics(self, request):
+        queryset = self.get_queryset()
+        stats = {
+            'total_workouts': queryset.count(),
+            'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'],
+            'workout_types': queryset.values('workout_type').annotate(
+                count=Count('id')
+            )
+        }
+        return Response(stats)
+```
+
+### Serializers
+
+```python
+class WorkoutSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    has_liked = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Workout
+        fields = [
+            'id', 'username', 'title', 'workout_type',
+            'date_logged', 'duration', 'intensity',
+            'notes', 'has_liked', 'created_at'
+        ]
+```
+
+## API Endpoints
+
+### Authentication
+
+```python
+urlpatterns = [
+    path('auth/login/', obtain_auth_token),
+    path('auth/register/', RegisterView.as_view()),
+    path('auth/logout/', LogoutView.as_view()),
+]
+```
+
+### Workouts
+
+```python
+urlpatterns = [
+    path('workouts/', WorkoutViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('workouts/<int:pk>/', WorkoutViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy'
+    })),
+    path('workouts/statistics/', WorkoutViewSet.as_view({'get': 'statistics'})),
+]
+```
+
+### Social
+
+```python
+urlpatterns = [
+    path('feed/', SocialFeedView.as_view()),
+    path('comments/', CommentViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('likes/', LikeView.as_view()),
+]
+```
+
+## Middleware
+
+### Custom Middleware
+
+```python
+class RequestLoggingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        logger.info(f"Request: {request.method} {request.path}")
+        response = self.get_response(request)
+        return response
+
+class RateLimitMiddleware:
+    def __call__(self, request):
+        if not self.check_rate_limit(request):
+            return HttpResponseTooManyRequests()
+```
+
+## Caching
+
+Redis caching configuration:
+
 ```python
 CACHES = {
     'default': {
@@ -161,140 +279,78 @@ CACHES = {
         }
     }
 }
+```
 
-# Cache timeouts
-CACHE_TTL = {
-    'workout_list': 300,  # 5 minutes
-    'profile': 3600,      # 1 hour
-    'stats': 1800        # 30 minutes
+## Security
+
+### CORS Configuration
+
+```python
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://fittrack-frontend.herokuapp.com"
+]
+
+CORS_ALLOW_CREDENTIALS = True
+```
+
+### JWT Settings
+
+```python
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
 }
 ```
 
-## Performance Optimizations
+## Testing
 
-### Database Optimizations
-- Indexed fields for frequent queries
-- Select_related for foreign keys
-- Prefetch_related for reverse relations
-- Pagination for large datasets
+Due to time constraints and bad planning, Unit tests have not been done for this API.
 
-### Query Optimizations
+## Deployment
+
+### Production Settings
+
 ```python
-# Efficient querying
-Workout.objects.select_related('user')\
-    .prefetch_related('likes', 'comments')\
-    .filter(created_at__gte=start_date)\
-    .order_by('-created_at')
-```
-
-## API Documentation
-
-Swagger/ReDoc integration:
-```python
-INSTALLED_APPS += ['drf_yasg']
-
-SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
-    }
+DEBUG = False
+ALLOWED_HOSTS = ['https://fitnessapi-d773a1148384.herokuapp.com/']
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 ```
 
-Access API documentation at:
-- Swagger UI: `/swagger/`
-- ReDoc: `/redoc/`
+### Environment Variables
 
-## Error Handling
-
-Custom exception handler:
-```python
-from rest_framework.views import exception_handler
-
-def custom_exception_handler(exc, context):
-    response = exception_handler(exc, context)
-    
-    if response is not None:
-        response.data['status_code'] = response.status_code
-        response.data['message'] = str(exc)
-    
-    return response
+```env
+SECRET_KEY=your-secret-key
+DATABASE_URL=your-database-url
+CLOUDINARY_URL=your-cloudinary-url
+REDIS_URL=your-redis-url
 ```
-
-## Backup and Recovery
-
-### Automated Backups
-- Daily database backups
-- Media files backup to S3
-- Logs backup
-
-### Recovery Procedures
-1. Database restoration
-2. Media files recovery
-3. Application state verification
-
-## Version Control Workflow
-
-1. Feature branches:
-```bash
-git checkout -b feature/new-feature
-git add .
-git commit -m "feat: add new feature"
-git push origin feature/new-feature
-```
-
-2. Pull requests:
-- Create PR from feature branch
-- Code review required
-- CI/CD checks pass
-- Merge to main
-
-## Contributing Guidelines
-
-1. Fork the repository
-2. Create feature branch
-3. Follow coding standards:
-   - PEP 8 for Python
-   - DRF best practices
-   - Test coverage required
-4. Submit PR with:
-   - Description
-   - Testing steps
-   - Screenshots if applicable
-
-## Cross-Browser Testing
-
-Tested on:
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-Using Browserstack for compatibility testing.
 
 ## Credits
 
+- Daisy Mentor for insight and over being the best mentor i've ever had
+
 ### Tools & Libraries
+
 - Django Rest Framework
 - dj-rest-auth
 - django-filter
-- django-cors-headers
 - django-redis
 - Cloudinary
 
-### Tutorials & Resources
-- DRF Official Documentation
+### Resources
+
+- DRF Documentation
 - Django Documentation
-- Real Python Tutorials
 - TestDriven.io
 
-## Acknowledgments
+## License
 
-Special thanks to:
-- Django community
-- Code Institute tutors
-- Project mentors
-- Testing volunteers
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details

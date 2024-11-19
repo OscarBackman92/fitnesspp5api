@@ -5,8 +5,10 @@ from django.utils import timezone
 from cloudinary.models import CloudinaryField
 from django.db.models import Count
 
+
 class Workout(models.Model):
     """Model to represent a workout."""
+
     CARDIO = 'cardio'
     STRENGTH = 'strength'
     FLEXIBILITY = 'flexibility'
@@ -31,18 +33,53 @@ class Workout(models.Model):
         (HIGH, 'High'),
     ]
 
-    title = models.CharField(max_length=200, default="My Workout", help_text="Title of the workout")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts', db_index=True)
-    workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES, db_index=True)
-    date_logged = models.DateField(default=timezone.now, db_index=True)
-    duration = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)], help_text="Duration in minutes")
-    notes = models.TextField(blank=True, help_text="Additional notes about the workout")
+    title = models.CharField(
+        max_length=200,
+        default="My Workout",
+        help_text="Title of the workout"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workouts',
+        db_index=True
+    )
+    workout_type = models.CharField(
+        max_length=100,
+        choices=WORKOUT_TYPES,
+        db_index=True
+    )
+    date_logged = models.DateField(
+        default=timezone.now,
+        db_index=True
+    )
+    duration = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(1440)],
+        help_text="Duration in minutes"
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about the workout"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    intensity = models.CharField(max_length=20, choices=INTENSITY_LEVELS, default=MODERATE, db_index=True)
-    image = CloudinaryField('image', folder='workout_images', blank=True, null=True, transformation={
-        'quality': 'auto:eco', 'fetch_format': 'auto', 'secure': True
-    })
+    intensity = models.CharField(
+        max_length=20,
+        choices=INTENSITY_LEVELS,
+        default=MODERATE,
+        db_index=True
+    )
+    image = CloudinaryField(
+        'image',
+        folder='workout_images',
+        blank=True,
+        null=True,
+        transformation={
+            'quality': 'auto:eco',
+            'fetch_format': 'auto',
+            'secure': True
+        }
+    )
 
     class Meta:
         ordering = ['-date_logged', '-created_at']
@@ -73,8 +110,17 @@ class Workout(models.Model):
 
 class WorkoutLike(models.Model):
     """Model to represent a like on a workout."""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_likes_workouts')
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='workout_likes_workouts')
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workout_likes_workouts'
+    )
+    workout = models.ForeignKey(
+        Workout,
+        on_delete=models.CASCADE,
+        related_name='workout_likes_workouts'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,8 +135,17 @@ class WorkoutLike(models.Model):
 
 class WorkoutComment(models.Model):
     """Model to represent a comment on a workout."""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workout_comments_workouts')
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='workout_comments_workouts')
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='workout_comments_workouts'
+    )
+    workout = models.ForeignKey(
+        Workout,
+        on_delete=models.CASCADE,
+        related_name='workout_comments_workouts'
+    )
     content = models.TextField(help_text="Comment content")
     created_at = models.DateTimeField(auto_now_add=True)
 
