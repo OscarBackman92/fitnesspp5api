@@ -322,9 +322,13 @@ SIMPLE_JWT = {
 
   ![pep8](/readme_images/api_utils_pep8.png)
 
+  ![pep8](/readme_images/api_admin_pep8.png)
+
   ![pep8](/readme_images/social_admin_pep8.png)
 
   ![pep8](/readme_images/social_model_pep8.png)
+
+  ![pep8](/readme_images/social_serializers_pep8.png)
 
   ![pep8](/readme_images/social_urls_pep8.png)
 
@@ -337,6 +341,12 @@ SIMPLE_JWT = {
   ![pep8](/readme_images/workout_urls_pep8.png)
 
   ![pep8](/readme_images/workout_view_pep8.png)
+
+  ![pep8](/readme_images/config_setting_pep8.png)
+
+  ![pep8](/readme_images/config_urls_pep8.png)
+
+  ![pep8](/readme_images/api_middleware_pep8.png)
 
 </details>
 
