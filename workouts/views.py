@@ -10,14 +10,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class WorkoutViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing workouts."""
+
     serializer_class = WorkoutSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         """Return objects for the current authenticated user only."""
-        return Workout.objects.filter(user=self.request.user).order_by('-date_logged')
+        return
+        Workout.objects.filter(user=self.request.user).order_by('-date_logged')
 
     def perform_create(self, serializer):
         """Save the workout with the current user."""
@@ -31,24 +34,28 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     def statistics(self, request):
         """Get workout statistics."""
         queryset = self.get_queryset()
-        
+
         try:
             stats = {
                 'total_workouts': queryset.count(),
-                'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
-                'avg_duration': round(queryset.aggregate(Avg('duration'))['duration__avg'] or 0, 2),
+                'total_duration':
+                    queryset.aggregate(Sum('duration'))['duration__sum'] or 0,
+                'avg_duration':
+                    round(queryset.aggregate(Avg(
+                        'duration'))['duration__avg'] or 0, 2),
                 'workout_types': queryset.values('workout_type').annotate(
                     count=Count('id'),
                     total_duration=Sum('duration'),
                     avg_duration=Avg('duration')
                 ),
-                'intensity_distribution': queryset.values('intensity').annotate(count=Count('id')),
+                'intensity_distribution':
+                    queryset.values('intensity').annotate(count=Count('id')),
             }
             return Response(stats)
         except Exception as e:
             logger.error(f"Error getting statistics: {str(e)}")
             return Response(
-                {'error': 'Failed to get statistics'}, 
+                {'error': 'Failed to get statistics'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -61,7 +68,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             total_duration=Sum('duration'),
             avg_duration=Avg('duration')
         )
-        
+
         return Response({
             'total_workouts': total_workouts,
             'total_duration': stats['total_duration'] or 0,
@@ -79,7 +86,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             .values_list('date_logged', flat=True)
             .distinct()
         )
-        
+
         if not dates:
             return {'current_streak': 0, 'longest_streak': 0}
 

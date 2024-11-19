@@ -6,6 +6,7 @@ from .models import WorkoutPost, Like, Comment
 from .serializers import WorkoutPostSerializer, CommentSerializer
 from workouts.models import Workout
 
+
 class WorkoutPostViewSet(viewsets.ModelViewSet):
     serializer_class = WorkoutPostSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -51,11 +52,11 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
             user=request.user,
             post=post
         )
-        
+
         if not created:
             like.delete()
             return Response({'status': 'unliked'})
-            
+
         return Response({'status': 'liked'})
 
     @action(detail=True, methods=['GET', 'POST'])

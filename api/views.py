@@ -1,5 +1,5 @@
 import logging
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters, status, generics
@@ -14,9 +14,9 @@ from .serializers import (
 )
 from .permissions import IsOwnerOrReadOnly
 from django.urls import reverse
-from django.db.models import Sum
 
 logger = logging.getLogger(__name__)
+
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for User Profiles."""
@@ -25,7 +25,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get queryset with optimized database queries and ordering."""
-        return UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
+        return
+        UserProfile.objects.select_related(
+            'user').prefetch_related('user__workouts').annotate(
             workouts_count=Count('user__workouts', distinct=True)
         ).order_by('-created_at')  # Order by created_at descending
 
@@ -39,11 +41,13 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         profile = get_object_or_404(UserProfile.objects.annotate(
             workouts_count=Count('user__workouts', distinct=True)
         ), pk=pk)
-        
+
         stats = {
             'total_workouts': profile.user.workouts.count(),
             'workouts_count': profile.workouts_count,
-            'total_workout_time': profile.user.workouts.aggregate(total_time=Sum('duration'))['total_time']
+            'total_workout_time':
+                profile.user.workouts.aggregate(total_time=Sum(
+                    'duration'))['total_time']
         }
         return Response(stats)
 
@@ -53,12 +57,18 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         profile = self.get_object()
 
         if request.user != profile.user:
-            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {'error': 'Permission denied'},
+                status=status.HTTP_403_FORBIDDEN)
 
         if 'profile_image' not in request.FILES:
-            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'No image provided'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(profile, data={'profile_image': request.FILES['profile_image']}, partial=True)
+        serializer = self.get_serializer(
+            profile,
+            data={'profile_image': request.FILES['profile_image']},
+            partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -73,18 +83,20 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         serializer = UserInfoSerializer(profile, context={'request': request})
         return Response(serializer.data)
 
+
 class GoalViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing goals."""
     serializer_class = GoalSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['description', 'type']
     filterset_fields = ['type', 'deadline']
     ordering_fields = ['deadline', 'created_at']
 
     def get_queryset(self):
         queryset = Goal.objects.filter(user_profile__user=self.request.user)
-        
+
         status = self.request.query_params.get('status', None)
         if status:
             if status == 'completed':
@@ -121,7 +133,9 @@ class GoalViewSet(viewsets.ModelViewSet):
             'active_goals': goals.filter(completed=False).count(),
             'upcoming_deadlines': [
                 {'description': goal.description, 'deadline': goal.deadline}
-                for goal in goals.filter(completed=False, deadline__gte=timezone.now()).order_by('deadline')[:5]
+                for goal in goals.filter(
+                    completed=False, deadline__gte=timezone.now()).order_by(
+                        'deadline')[:5]
             ]
         }
         return Response(summary)

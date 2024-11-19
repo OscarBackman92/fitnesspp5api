@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to edit it.
@@ -17,7 +18,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class IsCurrentUserOrReadOnly(permissions.BasePermission):
     """
-    Custom permission for UserProfile to ensure only the profile owner 
+    Custom permission for UserProfile to ensure only the profile owner
     can edit their own profile.
     """
     def has_object_permission(self, request, view, obj):
