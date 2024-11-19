@@ -306,7 +306,39 @@ SIMPLE_JWT = {
 
 ## Testing
 
-Due to time constraints and bad planning, Unit tests have not been done for this API.
+- Due to time constraints and bad planning, Unit tests have not been done for this API.
+- Pep8 Validation is not completely done for this project. Due to time contstraints.
+
+<details>
+  <summary>Pep8 for whats done</summary>
+  
+  ![pep8](/readme_images/api_models_pep8.png)
+
+  ![pep8](/readme_images/api_permissions_pep8.png)
+
+  ![pep8](/readme_images/api_serializer_pep8.png)
+
+  ![pep8](/readme_images/api_urls_pep8.png)
+
+  ![pep8](/readme_images/api_utils_pep8.png)
+
+  ![pep8](/readme_images/social_admin_pep8.png)
+
+  ![pep8](/readme_images/social_model_pep8.png)
+
+  ![pep8](/readme_images/social_urls_pep8.png)
+
+  ![pep8](/readme_images/social_view_pep8.png)
+
+  ![pep8](/readme_images/workout_model_pep8.png)
+
+  ![pep8](/readme_images/workout_serializer_pep8.png)
+
+  ![pep8](/readme_images/workout_urls_pep8.png)
+
+  ![pep8](/readme_images/workout_view_pep8.png)
+
+</details>
 
 ## Deployment
 
