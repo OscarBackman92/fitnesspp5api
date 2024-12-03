@@ -24,13 +24,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Get queryset with optimized database queries and ordering."""
-        return
-        UserProfile.objects.select_related(
-            'user').prefetch_related('user__workouts').annotate(
-            workouts_count=Count('user__workouts', distinct=True)
-        ).order_by('-created_at')  # Order by created_at descending
-
+        return UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
+        workouts_count=Count('user__workouts', distinct=True)
+    ).order_by('-created_at')
     def perform_create(self, serializer):
         """Create a new profile."""
         serializer.save(user=self.request.user)
@@ -53,29 +49,26 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'])
     def upload_image(self, request, pk=None):
-        """Upload profile image endpoint."""
         profile = self.get_object()
-
-        if request.user != profile.user:
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN)
-
         if 'profile_image' not in request.FILES:
-            return Response({'error': 'No image provided'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'No image file provided'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        serializer = self.get_serializer(
-            profile,
-            data={'profile_image': request.FILES['profile_image']},
-            partial=True)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        try:
+            file = request.FILES['profile_image']
+            profile.profile_image = file
+            profile.save()
+            return Response(
+                self.get_serializer(profile).data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     @action(detail=False, methods=['GET'])
     def full_info(self, request, pk=None):
         """Get full profile information including related data."""
