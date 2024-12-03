@@ -4,7 +4,9 @@ from .models import UserProfile, Goal
 from django.db import IntegrityError
 from cloudinary.utils import cloudinary_url
 from django.utils import timezone
+import logging
 
+logger = logging.getLogger(__name__)
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
@@ -50,17 +52,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
                     str(obj.profile_image),
                     format='webp',
                     transformation=[
-                        {'width':
-                            200, 'height': 200,
-                            'crop': 'fill', 'gravity': 'face'},
+                        {'width': 240, 'height': 240, 'crop': 'fill', 'gravity': 'face'},
                         {'quality': 'auto:eco'},
                         {'fetch_format': 'auto'}
                     ]
                 )
                 return url
-            except Exception:
-                return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
-        return 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default_image.png'
+            except Exception as e:
+                logger.error(f"Error getting profile image URL: {e}")
+                return cloudinary_url('default_profile_ylwpgw')[0]
+        return cloudinary_url('default_profile_ylwpgw')[0]
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""
