@@ -14,12 +14,6 @@ def api_root(request):
             'detail': request.build_absolute_uri(
                 reverse('profile-detail', kwargs={'pk': 1})),
         },
-        'goals': {
-            'list': request.build_absolute_uri(reverse('goal-list')),
-            'create': request.build_absolute_uri(reverse('goal-list')),
-            'detail': request.build_absolute_uri(reverse(
-                'goal-detail', kwargs={'pk': 1})),
-        },
         'auth': {
             'login': request.build_absolute_uri(reverse('rest_login')),
             'logout': request.build_absolute_uri(reverse('rest_logout')),

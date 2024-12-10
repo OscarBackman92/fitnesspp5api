@@ -42,44 +42,6 @@ class UserProfile(models.Model):
             raise ValidationError("Date of birth cannot be in the future.")
 
 
-class Goal(models.Model):
-    GOAL_TYPES = [
-        ('weight', 'Weight Goal'),
-        ('workout', 'Workout Frequency'),
-        ('strength', 'Strength Goal'),
-        ('cardio', 'Cardio Goal'),
-        ('custom', 'Custom Goal'),
-    ]
-
-    user_profile = models.ForeignKey(
-        UserProfile, on_delete=models.CASCADE, related_name='goals', null=True)
-    type = models.CharField(max_length=50, choices=GOAL_TYPES)
-    description = models.TextField()
-    target = models.CharField(max_length=100)
-    deadline = models.DateField(null=True, blank=True)
-    completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['deadline', '-created_at']
-
-    def __str__(self):
-        return f"{self.user_profile.user.username}'s {self.get_type_display()}"
-
-    def calculate_progress(self):
-        """Calculate goal progress based on completion and deadline."""
-        if self.completed:
-            return 100
-        if self.deadline:
-            days_total = (self.deadline - self.created_at.date()).days
-            days_passed = (timezone.now().date() - self.created_at.date()).days
-            if days_total > 0:
-                return min(int((days_passed / days_total) * 100), 100)
-            return 0
-        return 0
-
-
 def create_user_profile(sender, instance, created, **kwargs):
     """Signal to create user profile when user is created."""
     if created:
