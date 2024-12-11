@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import WorkoutPost, Comment
+from .models import WorkoutPost, Comment, Like
 from workouts.serializers import WorkoutSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer for user data in social interactions."""
     profile_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -12,21 +13,27 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'profile_image']
 
     def get_profile_image(self, obj):
+        """Get the profile image URL if it exists."""
         if hasattr(obj, 'profile') and obj.profile.profile_image:
-            return obj.profile.profile_image.url
+            return str(obj.profile.profile_image)
         return None
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Serializer for workout post comments."""
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'content', 'created_at', 'updated_at']
-        read_only_fields = ['user']
+        fields = [
+            'id', 'user', 'post', 'content',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['user', 'post']
 
 
 class WorkoutPostSerializer(serializers.ModelSerializer):
+    """Serializer for workout posts with related data."""
     user = UserSerializer(read_only=True)
     workout = WorkoutSerializer(read_only=True)
     likes_count = serializers.SerializerMethodField()
@@ -37,8 +44,9 @@ class WorkoutPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkoutPost
         fields = [
-            'id', 'user', 'workout', 'created_at', 'updated_at',
-            'likes_count', 'comments_count', 'has_liked', 'latest_comments'
+            'id', 'user', 'workout', 'created_at',
+            'updated_at', 'likes_count', 'comments_count',
+            'has_liked', 'latest_comments'
         ]
 
     def get_likes_count(self, obj):
