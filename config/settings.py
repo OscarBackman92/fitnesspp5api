@@ -76,7 +76,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
-    'debug_toolbar',  # Move this up
+    'debug_toolbar',
     'django_extensions',
     'cloudinary_storage',
     'cloudinary',
