@@ -22,25 +22,22 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    # Root endpoint redirects to API root
     path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/', include([
-        path('', include('api.urls')),  # API root and main endpoints
+        path('', include('api.urls', namespace='api')),
         path('workouts/', include('workouts.urls', namespace='workouts')),
         path('social/', include('social.urls', namespace='social')),
-        # Authentication endpoints
         path('auth/', include([
             path('', include('dj_rest_auth.urls')),
             path('registration/', include('dj_rest_auth.registration.urls')),
         ])),
     ])),
 
-    # API Documentation
     path('swagger/', schema_view.with_ui(
         'swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui(
-        ), name='schema-redoc'),
+        'redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
 if settings.DEBUG:
@@ -49,6 +46,5 @@ if settings.DEBUG:
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
-    # Serve media files in development
     urlpatterns += static(
         settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

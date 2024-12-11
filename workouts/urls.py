@@ -5,7 +5,7 @@ from .views import WorkoutViewSet
 app_name = 'workouts'
 
 router = DefaultRouter()
-router.register('', WorkoutViewSet, basename='workout')
+router.register(r'', WorkoutViewSet, basename='workout')
 
 urlpatterns = [
     path('', include(router.urls)),

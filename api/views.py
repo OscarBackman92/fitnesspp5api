@@ -11,7 +11,7 @@ from .serializers import (
     UserProfileSerializer,
     UserInfoSerializer
 )
-from .permissions import IsOwnerOrReadOnly
+from config.permissions import IsOwnerOrReadOnly
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
@@ -49,17 +49,15 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'])
     def upload_image(self, request, pk=None):
         profile = self.get_object()
-        if 'profile_image' not in request.FILES:
-            return Response({'error': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-        logger.debug(f"Received file: {request.FILES['profile_image']}")
-        try:
-            profile.profile_image = request.FILES['profile_image']
-            profile.save()
-            return Response(self.get_serializer(profile).data, status=status.HTTP_200_OK)
-        except Exception as e:
-            logger.error(f"Error during image upload: {e}")
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        image = request.FILES.get('profile_image')
+        if image:
+            try:
+                profile.profile_image = image
+                profile.save()
+                return Response({"status": "image uploaded successfully"})
+            except Exception as e:
+                return Response({"error": f"Error during image upload: {str(e)}"}, status=400)
+        return Response({"error": "No image provided"}, status=400)
 
     @action(detail=False, methods=['GET'])
     def full_info(self, request, pk=None):

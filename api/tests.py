@@ -28,31 +28,39 @@ class UserProfileModelTestCase(TestCase):
             profile.clean()
 
 class UserProfileAPITestCase(APITestCase):
-    """Tests for the UserProfile API endpoints"""
-
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.force_authenticate(user=self.user)
         self.profile = UserProfile.objects.get(user=self.user)
 
     def test_retrieve_user_profile(self):
-        url = reverse("profile-detail", kwargs={"pk": self.profile.id})
+        url = reverse("api:profile-detail", kwargs={"pk": self.profile.id})  # Correct namespace
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["username"], "testuser")
 
     def test_update_user_profile(self):
-        url = reverse("profile-detail", kwargs={"pk": self.profile.id})
+        url = reverse("api:profile-detail", kwargs={"pk": self.profile.id})
         response = self.client.patch(url, {"bio": "Updated bio"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.bio, "Updated bio")
 
     def test_upload_profile_image(self):
-        url = reverse("profile-upload-image", kwargs={"pk": self.profile.id})
-        image_path = r"C:\Users\fk_osba\OneDrive - Office Management\Skrivbordet\Oscar Projekt\fit_pro_images\workout_form.png"
+        url = reverse("api:profile-upload-image", kwargs={"pk": self.profile.id})
         
+        # Use the new image path
+        image_path = r"C:\Users\fk_osba\OneDrive - Office Management\Skrivbordet\Oscar Projekt\fit_pro_images\workout_model_pep8.png"
+
+        # Simulate an image upload
         with open(image_path, "rb") as image_file:
-            response = self.client.post(url, {"profile_image": image_file}, format="multipart")
+            image_data = SimpleUploadedFile(
+                name="workout_model_pep8.png",
+                content=image_file.read(),
+                content_type="image/png"
+            )
+            response = self.client.post(url, {"profile_image": image_data}, format="multipart")
         
+        # Assert the response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
