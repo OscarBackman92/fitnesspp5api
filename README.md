@@ -148,7 +148,7 @@ GET /api/workouts/statistics/
 
 ### Entity Relationship Diagram
 
-[Mermaid diagram appears here automatically]
+![erd](/readme_images/erd_fitness_api.png)
 
 ### Models Documentation
 
@@ -177,6 +177,8 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    
 ```
 
 [Additional model documentation...]
