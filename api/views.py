@@ -1,72 +1,93 @@
-import logging
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django.db.models import Count, Sum
 from django.utils import timezone
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, filters, status, generics
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
+from datetime import timedelta
 from .models import UserProfile
-from .serializers import (
-    UserProfileSerializer,
-    UserInfoSerializer
-)
+from .serializers import UserProfileSerializer
+from workouts.models import Workout
 from config.permissions import IsOwnerOrReadOnly
-from django.urls import reverse
-
-logger = logging.getLogger(__name__)
-
+from rest_framework import permissions
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing user profiles."""
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, 
-                        IsOwnerOrReadOnly]
-
-    def get_queryset(self):
-        return UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(
-        workouts_count=Count('user__workouts', distinct=True)
-    ).order_by('-created_at')
-    def perform_create(self, serializer):
-        """Create a new profile."""
-        serializer.save(user=self.request.user)
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     @action(detail=True, methods=['GET'])
     def stats(self, request, pk=None):
-        """Get user profile statistics for a specific profile."""
-        profile = get_object_or_404(UserProfile.objects.annotate(
-            workouts_count=Count('user__workouts', distinct=True)
-        ), pk=pk)
+        """Get user profile statistics."""
+        try:
+            profile = self.get_object()
+            
+            # Get the start of the current week
+            today = timezone.now().date()
+            week_start = today - timedelta(days=today.weekday())
+            
+            # Get user's workouts
+            user_workouts = Workout.objects.filter(owner=profile.user)
+            
+            # Calculate weekly workouts
+            weekly_workouts = user_workouts.filter(
+                date_logged__gte=week_start
+            ).count()
 
-        stats = {
-            'total_workouts': profile.user.workouts.count(),
-            'workouts_count': profile.workouts_count,
-            'total_workout_time':
-                profile.user.workouts.aggregate(total_time=Sum(
-                    'duration'))['total_time']
-        }
-        return Response(stats)
+            # Calculate total workout time
+            total_time = user_workouts.aggregate(
+                total=Sum('duration')
+            )['total'] or 0
 
-    @action(detail=True, methods=['POST'])
-    def upload_image(self, request, pk=None):
-        profile = self.get_object()
-        image = request.FILES.get('profile_image')
-        if image:
-            try:
-                profile.profile_image = image
-                profile.save()
-                return Response({"status": "image uploaded successfully"})
-            except Exception as e:
-                return Response({"error": f"Error during image upload: {str(e)}"}, status=400)
-        return Response({"error": "No image provided"}, status=400)
+            # Calculate streak
+            streak = self.calculate_streak(user_workouts)
 
-    @action(detail=False, methods=['GET'])
-    def full_info(self, request, pk=None):
-        """Get full profile information including related data."""
-        profile = self.get_object()
-        serializer = UserInfoSerializer(profile, context={'request': request})
-        return Response(serializer.data)
+            stats = {
+                'total_workouts': user_workouts.count(),
+                'workouts_this_week': weekly_workouts,
+                'total_workout_time': total_time,
+                'current_streak': streak,
+                # Additional stats
+                'workouts_by_type': self.get_workouts_by_type(user_workouts),
+                'followers_count': 0,  # Implement if you have followers
+                'following_count': 0,  # Implement if you have following
+            }
 
+            return Response(stats)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {'error': 'Profile not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
+    def calculate_streak(self, workouts):
+        """Calculate the current workout streak."""
+        if not workouts.exists():
+            return 0
 
+        # Get dates of workouts in descending order
+        workout_dates = workouts.order_by('-date_logged')\
+            .values_list('date_logged', flat=True)
+        
+        current_streak = 1
+        current_date = workout_dates[0]
+
+        # Check consecutive days
+        for date in workout_dates[1:]:
+            if current_date - date == timedelta(days=1):
+                current_streak += 1
+                current_date = date
+            else:
+                break
+
+        return current_streak
+
+    def get_workouts_by_type(self, workouts):
+        """Get workout count by type."""
+        return workouts.values('workout_type')\
+            .annotate(count=Count('id'))\
+            .order_by('workout_type')
