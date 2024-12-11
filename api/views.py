@@ -18,9 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    """ViewSet for User Profiles."""
+    """ViewSet for viewing and editing user profiles."""
+    queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, 
+                        IsOwnerOrReadOnly]
 
     def get_queryset(self):
         return UserProfile.objects.select_related('user').prefetch_related('user__workouts').annotate(

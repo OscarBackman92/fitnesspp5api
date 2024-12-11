@@ -9,9 +9,4 @@ app_name = 'api'
 
 urlpatterns = [
     path('', include(router.urls)),
-    path(
-        'profiles/<int:pk>/upload_image/',
-        UserProfileViewSet.as_view({'post': 'upload_image'}),
-        name='profile-upload-image',
-    ),
 ]
