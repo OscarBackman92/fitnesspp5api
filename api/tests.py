@@ -50,7 +50,7 @@ class UserProfileAPITestCase(APITestCase):
         url = reverse("api:profile-upload-image", kwargs={"pk": self.profile.id})
         
         # Use the new image path
-        image_path = r"C:\Users\fk_osba\OneDrive - Office Management\Skrivbordet\Oscar Projekt\fit_pro_images\workout_model_pep8.png"
+        image_path = r"C:\Users\fk_osba\OneDrive - Office Management\Skrivbordet\Oscar Projekt\fit_pro_images\api_permissions_pep8.png"
 
         # Simulate an image upload
         with open(image_path, "rb") as image_file:

@@ -12,8 +12,16 @@ class IsOwnerOrReadOnly(BasePermission):
         # Read-only permissions are allowed for any request
         if request.method in permissions.SAFE_METHODS:
             return True
-        # Write permissions are only allowed to the owner of the object
-        return hasattr(obj, 'owner') and obj.owner == request.user
+
+        # Check for owner field first (used by Workout model)
+        if hasattr(obj, 'owner'):
+            return obj.owner == request.user
+            
+        # Check for user field next (used by UserProfile and other models)
+        if hasattr(obj, 'user'):
+            return obj.user == request.user
+            
+        return False
 
 
 class IsCurrentUserOrReadOnly(BasePermission):
@@ -26,5 +34,6 @@ class IsCurrentUserOrReadOnly(BasePermission):
         # Allow read-only access for any request
         if request.method in permissions.SAFE_METHODS:
             return True
+
         # Allow write access only to the owner of the profile
-        return hasattr(obj, 'owner') and obj.owner == request.user
+        return hasattr(obj, 'user') and obj.user == request.user
