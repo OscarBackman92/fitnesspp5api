@@ -1,157 +1,166 @@
 # FitPro API Backend
 
-[![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)](https://python.org)
-[![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)](https://www.djangoproject.com/)
-[![DRF](https://img.shields.io/badge/DRF-3.15+-brightgreen.svg)](https://www.django-rest-framework.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.12+-brightgreen.svg)
+![Django](https://img.shields.io/badge/django-5.0+-brightgreen.svg)
+![DRF](https://img.shields.io/badge/DRF-3.15+-brightgreen.svg)
+
+[Live API](https://fitnessapi-d773a1148384.herokuapp.com/)
+[Frontend Repository](#) <!-- Add your frontend repo link -->
 
 ## Table of Contents
 
-1. [Overview](#overview)
+1. [Introduction](#introduction)
 2. [Features](#features)
-3. [Database Design](#database-design)
-4. [API Endpoints](#api-endpoints)
-5. [Models](#models)
-6. [Views & Serializers](#views--serializers)
-7. [Authentication](#authentication)
-8. [Testing](#testing)
-9. [Deployment](#deployment)
+3. [User Stories](#user-stories)
+4. [API Integration](#api-integration)
+5. [Database Design](#database-design)
+6. [Technologies](#technologies)
+7. [Testing](#testing)
+8. [Deployment](#deployment)
+9. [Development Process](#development-process)
+10. [Credits](#credits)
 
-## Overview
+## Introduction
 
-FitPro's backend API provides comprehensive fitness tracking functionality with:
+FitPro API Backend is a comprehensive Django REST Framework-based API designed to power social fitness applications. It provides robust backend functionality for workout tracking, social interactions, and community building.
 
-- JWT-based authentication
-- Workout tracking and analysis
-- Social features and interactions
-- Statistical reporting
-- Goal setting and monitoring
+### Project Goals
+
+- Provide secure user authentication and profile management
+- Enable detailed workout tracking and progress monitoring
+- Support social interactions between users
+- Ensure data privacy and security
+- Facilitate seamless frontend integration
+- Maintain comprehensive documentation
 
 ## Features
 
 ### Core Features
 
-- User authentication and profile management
-- Comprehensive workout tracking
-- Social interactions (likes, comments, follows)
-- Goal setting and progress monitoring
-- Statistical analysis and reporting
+1. User Authentication
+   - JWT-based authentication
+   - Secure password handling
+   - Token refresh mechanism
+
+2. Profile Management
+   - Customizable user profiles
+   - Profile image upload via Cloudinary
+   - Activity tracking
+
+3. Workout Tracking
+   - Multiple workout types
+   - Duration and intensity tracking
+   - Progress monitoring
+   - Workout statistics
+
+4. Social Features
+   - Workout sharing
+   - Likes and comments
+   - Activity feed
+
+### Technical Features
+
+1. Security
+   - CORS configuration
+   - Request rate limiting
+   - Proper permission handling
+
+2. Performance
+   - Database query optimization
+   - Cloudinary integration for media
+   - Redis caching (optional)
+
+## User Stories
+
+### Authentication & Profiles
+
+1. As a new user, I want to create an account
+   ```
+   Acceptance Criteria:
+   - Register with username/password
+   - Receive confirmation
+   - Automatic profile creation
+   - Set initial preferences
+   ```
+
+2. As a registered user, I want to manage my profile
+   ```
+   Acceptance Criteria:
+   - Edit profile information
+   - Update profile picture
+   - View activity history
+   - Manage privacy settings
+   ```
+
+[Additional user stories...]
+
+## API Integration
+
+### Authentication
+
+```python
+# Register
+POST /api/auth/registration/
+{
+    "username": "user",
+    "password1": "pass123!@#",
+    "password2": "pass123!@#",
+    "email": "user@example.com"
+}
+
+# Login
+POST /api/auth/login/
+{
+    "username": "user",
+    "password": "pass123!@#"
+}
+
+# Response
+{
+    "key": "Token..."
+}
+```
+
+### Workouts
+
+```python
+# Create Workout
+POST /api/workouts/
+{
+    "title": "Morning Run",
+    "workout_type": "cardio",
+    "duration": 30,
+    "intensity": "moderate",
+    "notes": "5k run",
+    "date_logged": "2024-03-14"
+}
+
+# Get Workouts with Filtering
+GET /api/workouts/?workout_type=cardio&date_after=2024-01-01
+
+# Get Workout Statistics
+GET /api/workouts/statistics/
+```
+
+[Additional endpoint documentation...]
 
 ## Database Design
 
-![database](/readme_images/api_erd.png)
+### Entity Relationship Diagram
 
-```mermaid
-erDiagram
-    User ||--||  UserProfile : has
-    User ||--o{  Workout : creates
-    User ||--o{  Goal : sets
-    User ||--o{  WorkoutLike : makes
-    User ||--o{  WorkoutComment : posts
-    User ||--o{  WorkoutPost : shares
-    
-    UserProfile {
-        int id PK
-        string name
-        text bio
-        float weight
-        float height
-        image profile_image
-        date date_of_birth
-        string gender
-        datetime created_at
-        datetime updated_at
-    }
+[Mermaid diagram appears here automatically]
 
-    Workout {
-        int id PK
-        string title
-        string workout_type
-        date date_logged
-        int duration
-        string intensity
-        text notes
-        image image
-        datetime created_at
-        datetime updated_at
-        int user FK
-    }
+### Models Documentation
 
-    Goal {
-        int id PK
-        string type
-        text description
-        string target
-        date deadline
-        boolean completed
-        datetime created_at
-        datetime updated_at
-        int user_profile FK
-    }
+<details>
+<summary>Complete Model Documentation</summary>
 
-    WorkoutLike {
-        int id PK
-        datetime created_at
-        int user FK
-        int workout FK
-    }
-
-    WorkoutComment {
-        int id PK
-        text content
-        datetime created_at
-        int user FK
-        int workout FK
-    }
-
-    WorkoutPost {
-        int id PK
-        datetime created_at
-        datetime updated_at
-        int user FK
-        int workout FK
-    }
-```
-
-## Models
-
-### Workout Model
-
-```python
-class Workout(models.Model):
-    WORKOUT_TYPES = [
-        (CARDIO, 'Cardio'),
-        (STRENGTH, 'Strength Training'),
-        (FLEXIBILITY, 'Flexibility'),
-        (SPORTS, 'Sports'),
-        (OTHER, 'Other'),
-    ]
-
-    INTENSITY_LEVELS = [
-        (LOW, 'Low'),
-        (MODERATE, 'Moderate'),
-        (HIGH, 'High'),
-    ]
-
-    title = models.CharField(max_length=200, default="My Workout")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    workout_type = models.CharField(max_length=100, choices=WORKOUT_TYPES)
-    date_logged = models.DateField(default=timezone.now)
-    duration = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)])
-    intensity = models.CharField(max_length=20, choices=INTENSITY_LEVELS, default=MODERATE)
-    notes = models.TextField(blank=True)
-    image = CloudinaryField('image', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-date_logged', '-created_at']
-```
-
-### Profile Model
-
+#### UserProfile Model
 ```python
 class UserProfile(models.Model):
+    """
+    Extends the User model with additional profile information.
+    """
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -166,233 +175,228 @@ class UserProfile(models.Model):
     profile_image = CloudinaryField('image', folder='profile_images')
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 ```
 
-## Views & Serializers
+[Additional model documentation...]
 
-### Workout Views
+</details>
 
-```python
-class WorkoutViewSet(viewsets.ModelViewSet):
-    serializer_class = WorkoutSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    
-    def get_queryset(self):
-        return Workout.objects.filter(user=self.request.user)
+## Technologies
 
-    @action(detail=False, methods=['GET'])
-    def statistics(self, request):
-        queryset = self.get_queryset()
-        stats = {
-            'total_workouts': queryset.count(),
-            'total_duration': queryset.aggregate(Sum('duration'))['duration__sum'],
-            'workout_types': queryset.values('workout_type').annotate(
-                count=Count('id')
-            )
-        }
-        return Response(stats)
+### Core Technologies
+
+- Python 3.12+
+- Django 5.1.2
+- Django REST Framework 3.15.2
+- PostgreSQL
+- Cloudinary
+- JWT Authentication
+
+### Development Tools
+
+- Git & GitHub
+- VS Code
+- Thunder Client/Postman
+- pgAdmin 4
+
+### Python Libraries
+
+```txt
+asgiref==3.8.1
+certifi==2024.8.30
+cloudinary==1.41.0
+dj-database-url==2.2.0
+dj-rest-auth==6.0.0
+Django==5.1.2
+django-allauth==65.0.2
+django-cors-headers==4.5.0
+djangorestframework==3.15.2
+psycopg2==2.9.9
+PyJWT==2.9.0
+python-dotenv==1.0.1
 ```
 
-### Serializers
-
-```python
-class WorkoutSerializer(serializers.ModelSerializer):
-    username = serializers.ReadOnlyField(source='user.username')
-    has_liked = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Workout
-        fields = [
-            'id', 'username', 'title', 'workout_type',
-            'date_logged', 'duration', 'intensity',
-            'notes', 'has_liked', 'created_at'
-        ]
-```
-
-## API Endpoints
-
-### Authentication
-
-```python
-urlpatterns = [
-    path('auth/login/', obtain_auth_token),
-    path('auth/register/', RegisterView.as_view()),
-    path('auth/logout/', LogoutView.as_view()),
-]
-```
-
-### Workouts
-
-```python
-urlpatterns = [
-    path('workouts/', WorkoutViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('workouts/<int:pk>/', WorkoutViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    })),
-    path('workouts/statistics/', WorkoutViewSet.as_view({'get': 'statistics'})),
-]
-```
-
-### Social
-
-```python
-urlpatterns = [
-    path('feed/', SocialFeedView.as_view()),
-    path('comments/', CommentViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('likes/', LikeView.as_view()),
-]
-```
-
-## Middleware
-
-### Custom Middleware
-
-```python
-class RequestLoggingMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        logger.info(f"Request: {request.method} {request.path}")
-        response = self.get_response(request)
-        return response
-
-class RateLimitMiddleware:
-    def __call__(self, request):
-        if not self.check_rate_limit(request):
-            return HttpResponseTooManyRequests()
-```
-
-## Caching
-
-Redis caching configuration:
-
-```python
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-```
-
-## Security
-
-### CORS Configuration
-
-```python
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://fittrack-frontend.herokuapp.com"
-]
-
-CORS_ALLOW_CREDENTIALS = True
-```
-
-### JWT Settings
-
-```python
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-}
-```
+[Full requirements.txt contents...]
 
 ## Testing
 
-- Due to time constraints and bad planning, Unit tests have not been done for this API.
-- Pep8 Validation is not completely done for this project. Due to time contstraints.
+### Automated Testing
+
+```bash
+# Run all tests
+python manage.py test
+
+# Run specific app tests
+python manage.py test workouts
+python manage.py test social
+
+# Run with coverage
+coverage run manage.py test
+coverage report
+coverage html
+```
+
+### Manual Testing Process
 
 <details>
-  <summary>Pep8 for whats done</summary>
-  
-  ![pep8](/readme_images/api_models_pep8.png)
+<summary>API Endpoint Testing Procedures</summary>
 
-  ![pep8](/readme_images/api_permissions_pep8.png)
+1. Authentication Testing
+   - Registration process
+   - Login/logout flow
+   - Token refresh
+   - Password reset
 
-  ![pep8](/readme_images/api_serializer_pep8.png)
+2. Workout Operations
+   - Create workout
+   - Update workout
+   - Delete workout
+   - List workouts with filters
 
-  ![pep8](/readme_images/api_urls_pep8.png)
-
-  ![pep8](/readme_images/api_utils_pep8.png)
-
-  ![pep8](/readme_images/api_admin_pep8.png)
-
-  ![pep8](/readme_images/social_admin_pep8.png)
-
-  ![pep8](/readme_images/social_model_pep8.png)
-
-  ![pep8](/readme_images/social_serializers_pep8.png)
-
-  ![pep8](/readme_images/social_urls_pep8.png)
-
-  ![pep8](/readme_images/social_view_pep8.png)
-
-  ![pep8](/readme_images/workout_model_pep8.png)
-
-  ![pep8](/readme_images/workout_serializer_pep8.png)
-
-  ![pep8](/readme_images/workout_urls_pep8.png)
-
-  ![pep8](/readme_images/workout_view_pep8.png)
-
-  ![pep8](/readme_images/config_setting_pep8.png)
-
-  ![pep8](/readme_images/config_urls_pep8.png)
-
-  ![pep8](/readme_images/api_middleware_pep8.png)
+[Additional testing procedures...]
 
 </details>
 
 ## Deployment
 
-### Production Settings
+### Local Development Setup
 
-```python
-DEBUG = False
-ALLOWED_HOSTS = ['https://fitnessapi-d773a1148384.herokuapp.com/']
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
-    )
-}
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
-```
+1. Clone the Repository
+   ```bash
+   git clone https://github.com/your-username/fitnessapi.git
+   cd fitnessapi
+   ```
 
-### Environment Variables
+2. Create Virtual Environment
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Unix
+   venv\Scripts\activate     # Windows
+   ```
 
-```env
-SECRET_KEY=your-secret-key
-DATABASE_URL=your-database-url
-CLOUDINARY_URL=your-cloudinary-url
-REDIS_URL=your-redis-url
-```
+3. Install Dependencies
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Environment Variables
+   Create a `.env` file:
+   ```
+   SECRET_KEY=your-secret-key
+   DEBUG=True
+   DATABASE_URL=your-database-url
+   CLOUDINARY_URL=your-cloudinary-url
+   ```
+
+5. Database Setup
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+6. Create Superuser
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+7. Run Development Server
+   ```bash
+   python manage.py runserver
+   ```
+
+### Heroku Deployment
+
+1. Prerequisites
+   - Heroku account
+   - Heroku CLI installed
+   - PostgreSQL database
+   - Cloudinary account
+
+2. Prepare the Application
+   ```bash
+   # Create Procfile
+   echo "web: gunicorn config.wsgi:application" > Procfile
+   
+   # Create runtime.txt
+   echo "python-3.12.0" > runtime.txt
+   
+   # Update requirements.txt
+   pip freeze > requirements.txt
+   ```
+
+3. Create Heroku App
+   ```bash
+   heroku create your-app-name
+   ```
+
+4. Configure Environment Variables
+   ```bash
+   heroku config:set SECRET_KEY=your-secret-key
+   heroku config:set DEBUG=False
+   heroku config:set ALLOWED_HOSTS=.herokuapp.com
+   heroku config:set DATABASE_URL=your-database-url
+   heroku config:set CLOUDINARY_URL=your-cloudinary-url
+   ```
+
+5. Database Setup
+   ```bash
+   heroku run python manage.py makemigrations
+   heroku run python manage.py migrate
+   ```
+
+6. Create Superuser
+   ```bash
+   heroku run python manage.py createsuperuser
+   ```
+
+7. Deploy Code
+   ```bash
+   git push heroku main
+   ```
+
+### Forking the Repository
+
+1. Go to the GitHub repository
+2. Click the "Fork" button in the top right
+3. Choose your account as the destination
+
+### Cloning the Repository
+
+1. Go to the GitHub repository
+2. Click the "Code" button
+3. Copy the HTTPS or SSH URL
+4. Open terminal and run:
+   ```bash
+   git clone [URL]
+   ```
+
+## Development Process
+
+### Version Control
+
+- Regular commits with clear messages
+- Feature branches for development
+- Pull requests for code review
+- Main branch protection
+
+### Code Quality
+
+- PEP 8 compliance
+- Regular code reviews
+- Comprehensive documentation
+- Automated testing
 
 ## Credits
 
-- Daisy Mentor for insight and over being the best mentor i've ever had
-
-### Tools & Libraries
-
-- Django Rest Framework
-- dj-rest-auth
-- django-filter
-- django-redis
-- Cloudinary
-
 ### Resources
+- [Django Documentation](https://docs.djangoproject.com/)
+- [Django REST Framework Documentation](https://www.django-rest-framework.org/)
+- [Cloudinary Documentation](https://cloudinary.com/documentation)
 
-- DRF Documentation
-- Django Documentation
-- TestDriven.io
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+### Acknowledgements
+- Code Institute tutors and mentors
+- Stack Overflow community
+- GitHub community
+- Fellow developers who provided feedback
