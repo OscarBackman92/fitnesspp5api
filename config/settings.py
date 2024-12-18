@@ -11,12 +11,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
+# DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
+DEBUG = True
 
 # Update ALLOWED_HOSTS to include both development and production hosts
 ALLOWED_HOSTS = [
     'http://localhost:3000', '127.0.0.1',
-    'fitnessapi-d773a1148384.herokuapp.com', 'localhost']
+    'fitnessapi-d773a1148384.herokuapp.com', 'localhost',
+    '8000-oscarbackma-fitnesspp5a-8bw449ssf7f.ws.codeinstitute-ide.net']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
