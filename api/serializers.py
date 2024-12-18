@@ -56,7 +56,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             except Exception as e:
                 logger.error(f"Error getting profile image URL: {e}")
                 return cloudinary_url('default_profile_ylwpgw')[0]
-        return cloudinary_url('default_profile_ylwpgw')[0]
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""
