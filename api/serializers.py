@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
-    profile_image = serializers.SerializerMethodField()
+    profile_image = serializers.ImageField(required=False)
     age = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
     workouts_count = serializers.IntegerField(read_only=True)

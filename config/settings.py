@@ -67,7 +67,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://localhost:3000",
     "http://127.0.0.1:3000",
     "https://127.0.0.1:3000",
-    "https://frontendfitness-e0476c66fecb.herokuapp.com"
+    "https://frontendfitness-e0476c66fecb.herokuapp.com",
+    "https://8000-oscarbackma-fitnesspp5a-pyrocxobb3r.ws.codeinstitute-ide.net"
 ]
 
 # Application definition
