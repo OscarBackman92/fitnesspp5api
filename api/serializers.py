@@ -41,21 +41,28 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return request and request.user == obj.user
 
     def get_profile_image(self, obj):
-        if obj.profile_image:
-            try:
-                url, options = cloudinary_url(
-                    str(obj.profile_image),
-                    format='webp',
-                    transformation=[
-                        {'width': 240, 'height': 240, 'crop': 'fill', 'gravity': 'face'},
-                        {'quality': 'auto:eco'},
-                        {'fetch_format': 'auto'}
-                    ]
-                )
-                return url
-            except Exception as e:
-                logger.error(f"Error getting profile image URL: {e}")
-                return cloudinary_url('default_profile_ylwpgw')[0]
+        """
+        Return the Cloudinary profile image URL or the fallback default image.
+        """
+        try:
+            if obj.profile_image and hasattr(obj.profile_image, 'url'):
+                # Return the uploaded profile image URL directly
+                return obj.profile_image.url
+            
+            # Fallback to default profile image
+            fallback_url, _ = cloudinary_url(
+                "default_profile_ylwpgw",
+                format="webp",
+                transformation=[
+                    {'width': 240, 'height': 240, 'crop': 'fill', 'gravity': 'face'},
+                    {'quality': 'auto:eco'},
+                    {'fetch_format': 'auto'}
+                ]
+            )
+            return fallback_url
+        except Exception as e:
+            logger.error(f"Error generating profile image URL: {e}")
+            return None
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""
