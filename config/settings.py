@@ -18,7 +18,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'http://localhost:3000', '127.0.0.1',
     'fitnessapi-d773a1148384.herokuapp.com', 'localhost',
-    '8000-oscarbackma-fitnesspp5a-8bw449ssf7f.ws.codeinstitute-ide.net']
+    '8000-oscarbackma-fitnesspp5a-pyrocxobb3r.ws.codeinstitute-ide.net']
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
