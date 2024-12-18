@@ -21,8 +21,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'name', 'bio', 'weight', 'height',
             'profile_image', 'date_of_birth', 'created_at',
-            'updated_at',
-            'gender', 'is_owner', 'workouts_count', 'age'
+            'updated_at', 'gender', 'is_owner', 'workouts_count', 'age'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
 
@@ -38,18 +37,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_is_owner(self, obj):
         request = self.context.get('request')
+        if not hasattr(obj, 'user'):
+            return None
         return request and request.user == obj.user
 
     def get_profile_image(self, obj):
-        """
-        Return the Cloudinary profile image URL or the fallback default image.
-        """
         try:
             if obj.profile_image and hasattr(obj.profile_image, 'url'):
-                # Return the uploaded profile image URL directly
                 return obj.profile_image.url
             
-            # Fallback to default profile image
             fallback_url, _ = cloudinary_url(
                 "default_profile_ylwpgw",
                 format="webp",
@@ -66,11 +62,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_age(self, obj):
         """Calculate age from date_of_birth."""
-        if obj.date_of_birth:
+        if isinstance(obj, dict):
+            date_of_birth = obj.get('date_of_birth')
+        else:
+            date_of_birth = obj.date_of_birth
+
+        if date_of_birth:
             today = timezone.now().date()
-            return today.year - obj.date_of_birth.year - (
-                (today.month, today.day) < (
-                    obj.date_of_birth.month, obj.date_of_birth.day)
+            return today.year - date_of_birth.year - (
+                (today.month, today.day) < (date_of_birth.month, date_of_birth.day)
             )
         return None
 

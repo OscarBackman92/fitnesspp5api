@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Count, Sum
@@ -8,26 +8,35 @@ from .models import UserProfile
 from .serializers import UserProfileSerializer
 from workouts.models import Workout
 from config.permissions import IsOwnerOrReadOnly
-from rest_framework import permissions
+
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
+    def perform_create(self, serializer):
+        """Assign the logged-in user to the user field."""
+        if UserProfile.objects.filter(user=self.request.user).exists():
+            return Response(
+                {"error": "User profile already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save(user=self.request.user)
+
     @action(detail=True, methods=['GET'])
     def stats(self, request, pk=None):
         """Get user profile statistics."""
         try:
             profile = self.get_object()
-            
+
             # Get the start of the current week
             today = timezone.now().date()
             week_start = today - timedelta(days=today.weekday())
-            
+
             # Get user's workouts
             user_workouts = Workout.objects.filter(owner=profile.user)
-            
+
             # Calculate weekly workouts
             weekly_workouts = user_workouts.filter(
                 date_logged__gte=week_start
@@ -46,21 +55,20 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 'workouts_this_week': weekly_workouts,
                 'total_workout_time': total_time,
                 'current_streak': streak,
-                # Additional stats
                 'workouts_by_type': self.get_workouts_by_type(user_workouts),
-                'followers_count': 0,  # Implement if you have followers
-                'following_count': 0,  # Implement if you have following
+                'followers_count': 0,  # Implement if needed
+                'following_count': 0,  # Implement if needed
             }
 
             return Response(stats)
         except UserProfile.DoesNotExist:
             return Response(
-                {'error': 'Profile not found'}, 
+                {'error': 'Profile not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
             return Response(
-                {'error': str(e)}, 
+                {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -70,9 +78,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             return 0
 
         # Get dates of workouts in descending order
-        workout_dates = workouts.order_by('-date_logged')\
+        workout_dates = workouts.order_by('-date_logged') \
             .values_list('date_logged', flat=True)
-        
+
         current_streak = 1
         current_date = workout_dates[0]
 
@@ -88,6 +96,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     def get_workouts_by_type(self, workouts):
         """Get workout count by type."""
-        return workouts.values('workout_type')\
-            .annotate(count=Count('id'))\
+        return workouts.values('workout_type') \
+            .annotate(count=Count('id')) \
             .order_by('workout_type')
