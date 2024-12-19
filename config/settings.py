@@ -99,10 +99,12 @@ INSTALLED_APPS = [
     'social',
 ]
 
+STATIC_URL = '/static/' 
+
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -123,7 +125,6 @@ if 'DATABASE_URL' in os.environ:
             ssl_require=not DEBUG
         )
     }
-    print("Database URL:", os.environ['DATABASE_URL'])  # Add this line
 else:
     DATABASES = {
         'default': {
@@ -132,7 +133,6 @@ else:
             'CONN_MAX_AGE': 60,
         }
     }
-    print("Using SQLite database")
 
 TEMPLATES = [
     {
@@ -146,32 +146,12 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'libraries': {
-                'staticfiles': 'django.templatetags.static',
-            }
         },
     },
 ]
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-WHITENOISE_MAX_AGE = 31536000
 
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+CLOUDINARY_URL =  os.environ.get('CLOUDINARY_URL')
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-CLOUDINARY_STORAGE = {
-    'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
-    'CLOUDINARY_API_PROXY': None,
-    'STATIC_IMAGES_EXTENSIONS': [
-        'jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg' 'webp', 'bmp', 'ico'],
-    'MAGIC_FILE_PATH': None,
-    'INVALID_VIDEO_ERROR_MESSAGE': '',
-    'TIMEOUT': 30,
-}
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',

@@ -24,7 +24,7 @@ class UserProfile(models.Model):
         null=True, blank=True, validators=[MinValueValidator(0)], default=0.0)
     profile_image = models.ImageField(
         upload_to='images/', 
-        default='images/default_profile_ylwpgw'
+        default='images/default_profile_ylwpgw.jpg'
     )
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(
