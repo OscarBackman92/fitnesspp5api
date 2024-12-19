@@ -123,6 +123,7 @@ if 'DATABASE_URL' in os.environ:
             ssl_require=not DEBUG
         )
     }
+    print("Database URL:", os.environ['DATABASE_URL'])  # Add this line
 else:
     DATABASES = {
         'default': {
@@ -131,6 +132,7 @@ else:
             'CONN_MAX_AGE': 60,
         }
     }
+    print("Using SQLite database")
 
 TEMPLATES = [
     {
