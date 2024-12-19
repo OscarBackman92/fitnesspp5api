@@ -150,7 +150,15 @@ TEMPLATES = [
     },
 ]
 
-CLOUDINARY_URL =  os.environ.get('CLOUDINARY_URL')
+CLOUDINARY_STORAGE = {
+    'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL'),
+    'CLOUDINARY_API_PROXY': None,
+    'STATIC_IMAGES_EXTENSIONS': [
+        'jpg', 'jpe', 'jpeg', 'png', 'gif', 'svg' 'webp', 'bmp', 'ico'],
+    'MAGIC_FILE_PATH': None,
+    'INVALID_VIDEO_ERROR_MESSAGE': '',
+    'TIMEOUT': 30,
+}
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 REST_FRAMEWORK = {

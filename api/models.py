@@ -22,10 +22,8 @@ class UserProfile(models.Model):
         null=True, blank=True, validators=[MinValueValidator(0)], default=0.0)
     height = models.FloatField(
         null=True, blank=True, validators=[MinValueValidator(0)], default=0.0)
-    profile_image = models.ImageField(
-        upload_to='images/', 
-        default='images/default_profile_ylwpgw.jpg'
-    )
+    profile_image = CloudinaryField(
+        'profile_image', null=True, blank=True, default='default_profile_ylwpgw')
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(
         max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
