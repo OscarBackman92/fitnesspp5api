@@ -80,7 +80,7 @@ class Workout(models.Model):
         verbose_name_plural = 'Workouts'
 
     def __str__(self):
-        return f"{self.title} - {self.owner.username} ({self.date_logged})"
+        return f"{self.title}({self.date_logged})"
 
     def get_duration_in_hours(self):
         """Convert duration from minutes to hours."""
