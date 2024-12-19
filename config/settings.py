@@ -11,8 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = os.environ.get('DEVELOPMENT', 'False').lower() == 'true'
-
+DEBUG = 'DEVELOPMENT' in os.environ
 
 # Update ALLOWED_HOSTS to include both development and production hosts
 ALLOWED_HOSTS = [
