@@ -62,9 +62,6 @@ class WorkoutTests(APITestCase):
     def test_list_workouts(self):
         """Test listing workouts for the logged-in user."""
         response = self.client.get(reverse('workouts:workout-list'))
-        print("Response status code:", response.status_code)
-        print("Response data:", response.data)
-        print("Workouts owned by owner:", Workout.objects.filter(owner=self.owner))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)  # Check the length of the 'results' list
         self.assertEqual(response.data['results'][0]['title'], 'Morning Run')
@@ -111,7 +108,6 @@ class WorkoutTests(APITestCase):
             duration=40,
             intensity="high"
         )
-        print("Other workout ID:", other_workout.id)
 
         # Try to update another user's workout
         response = self.client.patch(
@@ -119,22 +115,18 @@ class WorkoutTests(APITestCase):
             {"title": "Unauthorized Update"},
             format='json'
         )
-        print("Unauthorized update response status code:", response.status_code)
-        print("Unauthorized update response data:", response.data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Try to delete another user's workout
         response = self.client.delete(
             reverse('workouts:workout-detail', kwargs={'pk': other_workout.id})
         )
-        print("Unauthorized delete response status code:", response.status_code)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Try to delete another user's workout
         response = self.client.delete(
             reverse('workouts:workout-detail', kwargs={'pk': other_workout.id})
         )
-        print("Unauthorized delete response status code:", response.status_code)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
     def tearDown(self):

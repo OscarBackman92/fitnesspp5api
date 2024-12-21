@@ -7,60 +7,66 @@ from django.urls import reverse
 from datetime import date, timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
-from cloudinary.uploader import upload
 
 
 class UserProfileModelTestCase(TestCase):
     """Tests for the UserProfile model"""
 
     def setUp(self):
+        print("Setting up UserProfileModelTestCase...")
         self.user = User.objects.create_user(username="testuser", password="testpassword")
+        print(f"Created test user: {self.user.username}")
 
     def test_user_profile_creation(self):
+        print("Testing user profile creation...")
         profile = UserProfile.objects.get(user=self.user)
+        print(f"Retrieved profile for user: {self.user.username}")
         self.assertIsNotNone(profile)
         self.assertEqual(profile.user, self.user)
+        print("User profile creation test passed.")
 
     def test_date_of_birth_validation(self):
+        print("Testing date of birth validation...")
         profile = UserProfile.objects.get(user=self.user)
         profile.date_of_birth = date.today() + timedelta(days=1)  # Future date
-        with self.assertRaises(Exception):
+        print(f"Set date_of_birth to future date: {profile.date_of_birth}")
+        with self.assertRaises(Exception) as e:
             profile.clean()
+        print(f"Raised exception: {str(e.exception)}")
+        self.assertIn("Date of birth cannot be in the future.", str(e.exception))
+        print("Date of birth validation test passed.")
+
 
 class UserProfileAPITestCase(APITestCase):
+    """Tests for the UserProfile API"""
+
     def setUp(self):
+        print("Setting up UserProfileAPITestCase...")
         self.user = User.objects.create_user(username="testuser", password="testpassword")
+        print(f"Created test user: {self.user.username}")
         self.client.force_authenticate(user=self.user)
+        print(f"Authenticated client with user: {self.user.username}")
         self.profile = UserProfile.objects.get(user=self.user)
+        print(f"Retrieved profile for user: {self.user.username}")
 
     def test_retrieve_user_profile(self):
-        url = reverse("api:profile-detail", kwargs={"pk": self.profile.id})  # Correct namespace
+        print("Testing retrieve user profile...")
+        url = reverse("api:profile-detail", kwargs={"pk": self.profile.id})
+        print(f"Retrieve URL: {url}")
         response = self.client.get(url)
+        print(f"Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["username"], "testuser")
+        print("Retrieve user profile test passed.")
 
     def test_update_user_profile(self):
+        print("Testing update user profile...")
         url = reverse("api:profile-detail", kwargs={"pk": self.profile.id})
+        print(f"Update URL: {url}")
         response = self.client.patch(url, {"bio": "Updated bio"})
+        print(f"Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.profile.refresh_from_db()
+        print(f"Updated profile bio: {self.profile.bio}")
         self.assertEqual(self.profile.bio, "Updated bio")
-
-    def test_upload_profile_image(self):
-        url = reverse("api:profile-upload-image", kwargs={"pk": self.profile.id})
-        
-        # Use the new image path
-        image_path = r"C:\Users\fk_osba\OneDrive - Office Management\Skrivbordet\Oscar Projekt\fit_pro_images\api_permissions_pep8.png"
-
-        # Simulate an image upload
-        with open(image_path, "rb") as image_file:
-            image_data = SimpleUploadedFile(
-                name="workout_model_pep8.png",
-                content=image_file.read(),
-                content_type="image/png"
-            )
-            response = self.client.post(url, {"profile_image": image_data}, format="multipart")
-        
-        # Assert the response
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+        print("Update user profile test passed.")

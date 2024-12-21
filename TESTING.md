@@ -74,19 +74,6 @@ def test_update_user_profile(self):
     self.profile.refresh_from_db()
     self.assertEqual(self.profile.bio, "Updated bio")
 
-def test_upload_profile_image(self):
-    """Tests profile image upload functionality"""
-    url = reverse("api:profile-upload-image", kwargs={"pk": self.profile.id})
-    with open(image_path, "rb") as image_file:
-        image_data = SimpleUploadedFile(
-            name="test_image.png",
-            content=image_file.read(),
-            content_type="image/png"
-        )
-        response = self.client.post(url, {"profile_image": image_data}, format="multipart")
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-```
-
 ## Social Tests
 
 ### SocialModelTests

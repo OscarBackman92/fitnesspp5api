@@ -27,6 +27,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', api_root, name='api-root'),
+    
     path('api/', include('api.urls')),
     path('api/workouts/', include('workouts.urls')),
     path('api/social/', include('social.urls')),
