@@ -60,11 +60,13 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 - Rich API documentation
 - Comprehensive test coverage
 - Production-ready deployment configuration
+
 ## Features
 
 ### Core Features
 
 #### 1. User Authentication
+
 - JWT-based authentication system
 - Secure password handling with validation
 - Token refresh mechanism
@@ -75,6 +77,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 - Rate limiting protection
 
 #### 2. Profile Management
+
 - Customizable user profiles
 - Profile image upload via Cloudinary
 - Activity tracking and history
@@ -85,6 +88,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 - Profile metrics tracking
 
 #### 3. Workout Tracking
+
 - Multiple workout types support:
   - Cardio
   - Strength Training
@@ -105,6 +109,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
   - Goal setting
 
 #### 4. Social Features
+
 - Workout sharing capabilities
 - Like and comment system
 - Activity feed generation
@@ -117,6 +122,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 ### Technical Features
 
 #### 1. Security Implementation
+
 - CORS configuration
 - Request rate limiting
 - XSS protection
@@ -127,6 +133,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 - Security headers
 
 #### 2. Performance Optimization
+
 - Database query optimization
 - Cloudinary media integration
 - Redis caching system
@@ -141,6 +148,7 @@ FitPro API Backend is a comprehensive Django REST Framework-based API designed t
 ### Authentication
 
 #### Registration
+
 ```http
 POST /api/auth/registration/
 Content-Type: application/json
@@ -164,6 +172,7 @@ Content-Type: application/json
 ```
 
 #### Login
+
 ```http
 POST /api/auth/login/
 Content-Type: application/json
@@ -187,6 +196,7 @@ Content-Type: application/json
 ### Workout Management
 
 #### Create Workout
+
 ```http
 POST /api/workouts/
 Authorization: Token your-auth-token
@@ -203,6 +213,7 @@ Content-Type: application/json
 ```
 
 #### Get Workouts with Filtering
+
 ```http
 GET /api/workouts/?workout_type=cardio&date_after=2024-01-01
 Authorization: Token your-auth-token
@@ -219,6 +230,7 @@ Authorization: Token your-auth-token
 ### Social Interaction
 
 #### Create Post
+
 ```http
 POST /api/social/feed/
 Authorization: Token your-auth-token
@@ -231,6 +243,7 @@ Content-Type: application/json
 ```
 
 #### Like/Unlike Post
+
 ```http
 POST /api/social/feed/1/like/
 Authorization: Token your-auth-token
@@ -262,6 +275,7 @@ X-RateLimit-Reset: 1627498800
 ### Core Models
 
 #### UserProfile
+
 ```python
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -275,6 +289,7 @@ class UserProfile(models.Model):
 ```
 
 #### Workout
+
 ```python
 class Workout(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -287,6 +302,7 @@ class Workout(models.Model):
 ```
 
 #### Social Models
+
 ```python
 class WorkoutPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -307,6 +323,7 @@ class Comment(models.Model):
 ## Technologies
 
 ### Core Stack
+
 - Python 3.12+
 - Django 5.1.2
 - Django REST Framework 3.15.2
@@ -316,6 +333,7 @@ class Comment(models.Model):
 - JWT Authentication
 
 ### Development Tools
+
 - Git & GitHub
 - VS Code
 - Thunder Client/Postman
@@ -323,12 +341,14 @@ class Comment(models.Model):
 - Docker
 
 ### Testing Tools
+
 - Django Test Suite
 - Coverage.py
 - Factory Boy
 - Faker
 
 ### Additional Libraries
+
 ```txt
 asgiref==3.8.1
 certifi==2024.8.30
@@ -348,12 +368,14 @@ whitenoise==6.7.0
 ## Deployment
 
 ### Prerequisites
+
 - Heroku account
 - PostgreSQL database
 - Cloudinary account
 - Email service (optional)
 
 ### Local Development Setup
+
 ```bash
 # Clone repository
 git clone https://github.com/your-username/fitnessapi.git
@@ -383,6 +405,7 @@ python manage.py runserver
 ```
 
 ### Heroku Deployment
+
 ```bash
 # Login to Heroku
 heroku login
@@ -407,6 +430,7 @@ heroku run python manage.py migrate
 ## Development Process
 
 ### Agile Methodology
+
 - Two-week sprint cycles
 - Daily standups
 - Sprint planning meetings
@@ -414,6 +438,7 @@ heroku run python manage.py migrate
 - Continuous integration/deployment
 
 ### Version Control
+
 - Feature branch workflow
 - Pull request reviews
 - Semantic versioning
@@ -421,6 +446,7 @@ heroku run python manage.py migrate
 - Deployment automation
 
 ### Code Quality
+
 - PEP 8 compliance
 - Regular code reviews
 - Comprehensive documentation
@@ -431,31 +457,27 @@ heroku run python manage.py migrate
 
 Detailed testing documentation is available in [TESTING.md](TESTING.md)
 
-Key metrics:
-- Unit test coverage: 93%
-- Integration test coverage: 89%
-- End-to-end test coverage: 85%
-- Performance benchmarks passed
-- Security tests passed
-
 ## Credits
 
 ### Resources
+
 - [Django Documentation](https://docs.djangoproject.com/)
 - [Django REST Framework Documentation](https://www.django-rest-framework.org/)
 - [Cloudinary Documentation](https://cloudinary.com/documentation)
 
 ### Project Team
+
 - Backend Development: [Your Name]
 - Code Review: [Reviewer Names]
 - Testing: [Tester Names]
 - UX/UI Design: [Designer Names]
 
 ### Acknowledgements
-- Code Institute tutors and mentors
+
+- Daisy Mentor
 - Stack Overflow community
 - Django community
-- Beta testers and early adopters
+- Family for testing
 
 ## License
 
