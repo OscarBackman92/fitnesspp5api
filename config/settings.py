@@ -78,7 +78,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
-    'debug_toolbar',
     'django_extensions',
     'cloudinary_storage',
     'cloudinary',
@@ -111,7 +110,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
 
@@ -289,15 +287,6 @@ REST_AUTH = {
     'USER_DETAILS_SERIALIZER': 'api.serializers.UserInfoSerializer',
     'REGISTER_VERIFICATION_ENABLED': False,
     'LOGIN_VERIFICATION_ENABLED': False,
-}
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
-
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
-    'INTERCEPT_REDIRECTS': False,
 }
 
 

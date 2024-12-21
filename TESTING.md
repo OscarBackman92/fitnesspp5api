@@ -228,15 +228,6 @@ def test_unauthorized_workout_access(self):
     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 ```
 
-## Test Coverage
-
-To run tests with coverage:
-```bash
-coverage run manage.py test
-coverage report
-coverage html  # For detailed HTML report
-```
-
 ## Running Tests
 To run all tests:
 ```bash
