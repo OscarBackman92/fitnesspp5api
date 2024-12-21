@@ -1,10 +1,12 @@
 # Testing Documentation
 
 ## Overview
+
 Total Tests: 18
 Testing Strategy: Each model, view, and component is tested for both successful operations and error handling.
 
 ## Manuel Testing/Markdown
+
 | Test Case                    | Steps                                                                               | Expected Result                                                           | Actual Result     | Status |
 | ---------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------- | ------ |
 | Create new account           | 1\. Click "Sign Up" in navbar 2. Fill in registration form 3. Submit form           | Form submits successfully and redirects to dashboard with success message | Works as expected | Pass   |
@@ -27,11 +29,13 @@ Testing Strategy: Each model, view, and component is tested for both successful 
 
 
 ## Contents
+
 1. [API Tests](#api-tests)
 2. [Social Tests](#social-tests)
 3. [Workout Tests](#workout-tests)
 
 ## Test Results Summary
+
 ```bash
 Found 18 test(s).
 Creating test database for alias 'default'...
@@ -42,6 +46,7 @@ System check identified no issues (0 silenced).
 ## API Tests
 
 ### UserProfileModelTestCase
+
 ```python
 def test_user_profile_creation(self):
     """Tests automatic profile creation when user is created"""
@@ -58,6 +63,7 @@ def test_date_of_birth_validation(self):
 ```
 
 ### UserProfileAPITestCase
+
 ```python
 def test_retrieve_user_profile(self):
     """Tests retrieving a user profile"""
@@ -106,6 +112,7 @@ def test_comment_creation(self):
 ```
 
 ### SocialViewTests
+
 ```python
 def test_list_workout_posts(self):
     """Tests listing workout posts"""
@@ -145,6 +152,7 @@ def test_comment_on_post(self):
 ## Workout Tests
 
 ### WorkoutTests
+
 ```python
 def test_create_workout(self):
     """Tests creating a new workout"""
@@ -216,12 +224,15 @@ def test_unauthorized_workout_access(self):
 ```
 
 ## Running Tests
+
 To run all tests:
+
 ```bash
 python manage.py test
 ```
 
 To run tests for a specific app:
+
 ```bash
 python manage.py test api
 python manage.py test social
@@ -229,9 +240,11 @@ python manage.py test workouts
 ```
 
 To run a specific test case:
+
 ```bash
 python manage.py test api.tests.UserProfileAPITestCase
 ```
 
 ## Validation
+
 All test files have been validated against PEP8 standards using pycodestyle. See validation screenshots in the README.md file.
