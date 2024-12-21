@@ -8,6 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     email = serializers.ReadOnlyField(source='user.email')
@@ -20,8 +21,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = [
             'id', 'username', 'email', 'name', 'bio', 'weight', 'height',
-            'profile_image', 'date_of_birth', 'created_at',
-            'updated_at', 'gender', 'is_owner', 'workouts_count', 'age'
+            'profile_image', 'date_of_birth', 'created_at', 'updated_at',
+            'gender', 'is_owner', 'workouts_count', 'age'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
 
@@ -31,7 +32,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         if len(value) > 500:
             raise serializers.ValidationError(
-                'Bio cannot exceed 500 characters')
+                'Bio cannot exceed 500 characters'
+            )
 
         return value
 
@@ -45,12 +47,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         try:
             if obj.profile_image and hasattr(obj.profile_image, 'url'):
                 return obj.profile_image.url
-            
+
             fallback_url, _ = cloudinary_url(
                 "default_profile_ylwpgw",
                 format="webp",
                 transformation=[
-                    {'width': 240, 'height': 240, 'crop': 'fill', 'gravity': 'face'},
+                    {'width': 240, 'height': 240,
+                        'crop': 'fill', 'gravity': 'face'},
                     {'quality': 'auto:eco'},
                     {'fetch_format': 'auto'}
                 ]
@@ -70,7 +73,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if date_of_birth:
             today = timezone.now().date()
             return today.year - date_of_birth.year - (
-                (today.month, today.day) < (date_of_birth.month, date_of_birth.day)
+                (today.month, today.day) < (
+                    date_of_birth.month, date_of_birth.day)
             )
         return None
 
@@ -78,11 +82,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if value:
             if value.size > 2 * 1024 * 1024:
                 raise serializers.ValidationError(
-                    'Image size cannot exceed 2MB')
+                    'Image size cannot exceed 2MB'
+                )
             allowed_types = ['image/jpeg', 'image/png', 'image/webp']
             if hasattr(value, 'content_type') and value.content_type not in allowed_types:
                 raise serializers.ValidationError(
-                    'Only JPEG, PNG and WebP images are allowed')
+                    'Only JPEG, PNG, and WebP images are allowed'
+                )
         return value
 
 
