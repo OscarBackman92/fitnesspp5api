@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.urls import reverse
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_root(request):

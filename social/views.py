@@ -94,10 +94,12 @@ class WorkoutPostViewSet(viewsets.ModelViewSet):
 
         try:
             with transaction.atomic():
-                serializer = CommentSerializer(data={'content': request.data.get('content')})
+                serializer = CommentSerializer(
+                    data={'content': request.data.get('content')})
                 if serializer.is_valid():
                     serializer.save(user=request.user, post=post)
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(
+                        serializer.data, status=status.HTTP_201_CREATED)
                 return Response(
                     serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST
