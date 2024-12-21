@@ -62,4 +62,3 @@ class WorkoutSerializer(serializers.ModelSerializer):
             data['title'] = f"{workout_type} Workout"
 
         return data
-
