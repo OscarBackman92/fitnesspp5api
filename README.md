@@ -404,28 +404,27 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### Version Control
+
+The site was created using the Visual Studio Code editor and pushed to github to the remote repository Battleship_PP3_CI
+
+The following git commands were used throughout development to push code to the remote repo:
+
+- ```git add .``` - This command was used to add the file(s) to the staging area before they are committed.
+- ```git commit -m "commit message"``` - This command was used to commit changes to the local repository queue ready for the final step.
+- ```git push``` - This command was used to push all committed code to the remote repository on github.
+
 ### Heroku Deployment
 
-```bash
-# Login to Heroku
-heroku login
+The below steps were followed to deploy this project to Heroku:
 
-# Create app
-heroku create your-app-name
+- Go to Heroku and click "New" to create a new app.
 
-# Configure environment variables
-heroku config:set DJANGO_SETTINGS_MODULE=config.settings
-heroku config:set SECRET_KEY=your-secret-key
-heroku config:set ALLOWED_HOSTS=.herokuapp.com
-heroku config:set DATABASE_URL=your-database-url
-heroku config:set CLOUDINARY_URL=your-cloudinary-url
-
-# Deploy
-git push heroku main
-
-# Run migrations
-heroku run python manage.py migrate
-```
+- Choose an app name and region region, click "Create app".
+- Navigate to Buildpacks and add buildpacks for Python and NodeJS (in that order).
+- Navigate to "Deploy". Set the deployment method to Github and enter repository name and connect.
+- Scroll down to Manual Deploy, select "main" branch and click "Deploy Branch".
+- The app will now be deployed to heroku
 
 ## Development Process
 
