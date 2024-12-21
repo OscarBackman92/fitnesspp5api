@@ -4,7 +4,8 @@ from rest_framework.permissions import BasePermission
 
 class IsOwnerOrReadOnly(BasePermission):
     """
-    Custom permission to allow only the owner of an object to edit or delete it.
+    Custom permission to allow only the owner
+    of an object to edit or delete it.
     Other users can only read the object.
     """
 
@@ -16,11 +17,11 @@ class IsOwnerOrReadOnly(BasePermission):
         # Check for owner field first (used by Workout model)
         if hasattr(obj, 'owner'):
             return obj.owner == request.user
-            
+
         # Check for user field next (used by UserProfile and other models)
         if hasattr(obj, 'user'):
             return obj.user == request.user
-            
+
         return False
 
 
