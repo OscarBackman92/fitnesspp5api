@@ -450,8 +450,16 @@ heroku run python manage.py migrate
 - PEP 8 compliance
 - Regular code reviews
 - Comprehensive documentation
-- Test coverage monitoring
-- Performance optimization
+
+PEP8 Validation
+API Module
+<details> <summary>Expand API Module</summary> <img src="readme_images/api_admin.png" alt="API Admin" width="100%"> <img src="readme_images/api_middelware.png" alt="API Middleware" width="100%"> <img src="readme_images/api_models.png" alt="API Models" width="100%"> <img src="readme_images/api_serializer.png" alt="API Serializers" width="100%"> <img src="readme_images/api_url.png" alt="API URLs" width="100%"> <img src="readme_images/api_utils.png" alt="API Utilities" width="100%"> <img src="readme_images/api_views.png" alt="API Views" width="100%"> </details>
+Config Module
+<details> <summary>Expand Config Module</summary> <img src="readme_images/config_permissions.png" alt="Config Permissions" width="100%"> <img src="readme_images/config_settings.png" alt="Config Settings" width="100%"> <img src="readme_images/config_uls.png" alt="Config URLs" width="100%"> <img src="readme_images/config_views.png" alt="Config Views" width="100%"> </details>
+Social Module
+<details> <summary>Expand Social Module</summary> <img src="readme_images/social_admin.png" alt="Social Admin" width="100%"> <img src="readme_images/social_models.png" alt="Social Models" width="100%"> <img src="readme_images/social_serializer.png" alt="Social Serializers" width="100%"> <img src="readme_images/social_urls.png" alt="Social URLs" width="100%"> <img src="readme_images/social_view.png" alt="Social Views" width="100%"> </details>
+Workouts Module
+<details> <summary>Expand Workouts Module</summary> <img src="readme_images/workouts_admin.png" alt="Workouts Admin" width="100%"> <img src="readme_images/workouts_models.png" alt="Workouts Models" width="100%"> <img src="readme_images/workouts_serializers.png" alt="Workouts Serializers" width="100%"> <img src="readme_images/workouts_urls.png" alt="Workouts URLs" width="100%"> <img src="readme_images/workouts_view.png" alt="Workouts Views" width="100%"> </details>
 
 ## Testing
 
