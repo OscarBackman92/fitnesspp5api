@@ -37,10 +37,14 @@ Testing Strategy: Each model, view, and component is tested for both successful 
 ## Test Results Summary
 
 ```bash
-Found 18 test(s).
+Found 11 test(s).
 Creating test database for alias 'default'...
 System check identified no issues (0 silenced).
-.......OK
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 18.063s
+
+OK
 ```
 
 ## API Tests
