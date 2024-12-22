@@ -20,34 +20,6 @@
 9. [Development Process](#development-process)
 10. [Credits](#credits)
 
-## Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/fitnessapi.git
-cd fitnessapi
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Unix
-venv\Scripts\activate     # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables (copy from .env.example)
-cp .env.example .env
-
-# Run migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Run development server
-python manage.py runserver
-```
-
 ## Introduction
 
 FitPro API Backend is a comprehensive Django REST Framework-based API designed to power social fitness applications. It provides robust backend functionality for workout tracking, social interactions, and community building.
@@ -343,9 +315,7 @@ class Comment(models.Model):
 ### Testing Tools
 
 - Django Test Suite
-- Coverage.py
-- Factory Boy
-- Faker
+- Markdown manual testing
 
 ### Additional Libraries
 
@@ -474,10 +444,7 @@ Detailed testing documentation is available in [TESTING.md](TESTING.md)
 
 ### Project Team
 
-- Backend Development: [Your Name]
-- Code Review: [Reviewer Names]
-- Testing: [Tester Names]
-- UX/UI Design: [Designer Names]
+- Family and Friend
 
 ### Acknowledgements
 
