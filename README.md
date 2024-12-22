@@ -442,10 +442,6 @@ Detailed testing documentation is available in [TESTING.md](TESTING.md)
 - [Django REST Framework Documentation](https://www.django-rest-framework.org/)
 - [Cloudinary Documentation](https://cloudinary.com/documentation)
 
-### Project Team
-
-- Family and Friend
-
 ### Acknowledgements
 
 - Daisy Mentor
