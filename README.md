@@ -5,7 +5,7 @@
 ![DRF](https://img.shields.io/badge/DRF-3.15+-brightgreen.svg)
 
 [Live API](https://fitnessapi-d773a1148384.herokuapp.com/)
-[Frontend Repository](https://github.com/oscarfzs/fitnessfrontend)
+[Frontend Repository](https://github.com/OscarBackman92/FitPro)
 
 ## Table of Contents
 
